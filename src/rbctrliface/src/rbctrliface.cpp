@@ -70,6 +70,7 @@ RbCtrlIface::RbCtrlIface(int boardIdx, string serialPort,
 
         ros::Duration(0.5).sleep(); // sleep for half a second
 
+        mBoardConnected = true;
     }
 
 

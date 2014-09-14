@@ -2,12 +2,12 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#include <robocontroller/Telemetry.h>
 #include <stdlib.h>
 
 #include "rbctrliface.h"
 #include "robotctrl.h"
 #include "modbus_registers.h"
-#include "rc_common.h"
 
 using namespace std;
 
@@ -66,6 +66,10 @@ int main( int argc, char **argv)
     // Subscription to use Turtle keyboard node
     ros::Subscriber cmd_vel_turtle_sub = nh.subscribe( "/turtle1/cmd_vel", 3, &vel_cmd_callback );
 
+    // Publisher for the Telemetry of the robot
+    ros::Publisher telem_pub = nh.advertise<robocontroller::Telemetry>( "/robocontroller/Telemetry", 100 );
+    robocontroller::Telemetry telemetry_msg;
+
     // >>>>> Interface to RoboController board
 
     // TODO load params using ROS parameters
@@ -76,7 +80,7 @@ int main( int argc, char **argv)
     char parity = 'N';
     int data_bit = 8;
     int stop_bit = 1;
-    bool simulMode = false;
+    bool simulMode = true;
 
     rbCtrlIface = new RbCtrlIface( boardIdx, serialPort, serialbaudrate, parity, data_bit, stop_bit, simulMode );
 
@@ -99,7 +103,27 @@ int main( int argc, char **argv)
     {
         ros::spinOnce(); // Process pending callback
 
-        // TODO request telemetry data to RoboController
+        // >>>>> Publishing Telemetry at 30Hz
+        RobotTelemetry roboTelemetry;
+        if( rbCtrl->getTelemetry( roboTelemetry ) )
+        {
+            telemetry_msg.header.stamp = ros::Time::now();
+            telemetry_msg.mot_pwm_left = roboTelemetry.PwmLeft;
+            telemetry_msg.mot_pwm_right = roboTelemetry.PwmRight;
+            telemetry_msg.mot_rpm_left = roboTelemetry.RpmLeft;
+            telemetry_msg.mot_speed_left = roboTelemetry.LinSpeedLeft;
+            telemetry_msg.mot_speed_right = roboTelemetry.LinSpeedRight;
+            telemetry_msg.battery = roboTelemetry.Battery;
+
+            telem_pub.publish( telemetry_msg );
+
+            ROS_DEBUG_STREAM( "Telemetry ID " << telemetry_msg.header.seq << "published" );
+        }
+        else
+        {
+            ROS_WARN_STREAM( "No telemetry received" );
+        }
+        // <<<<< Publishing Telemetry at 30Hz
 
         // >>>>> if not received a movement message for 1 sec then stop motors!
         double time_since_last_cmd = (ros::Time::now() - last_vel_cmd_time).toSec();

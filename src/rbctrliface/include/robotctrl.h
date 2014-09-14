@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>
 #include "rbctrliface.h"
-#include "rc_common.h"
+#include "rc_msg_srv.h"
 
 class RobotCtrl
 {

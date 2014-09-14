@@ -12,21 +12,27 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
 )
 
-# Declare our catkin package.
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES robocontroller
-   CATKIN_DEPENDS geometry_msgs message_runtime std_msgs std_srvs
-#  DEPENDS system_lib
-)
-
 #########################################################
 # MESSAGES
 add_message_files(
     FILES
     Telemetry.msg
 )
+
+generate_messages(
+    DEPENDENCIES
+    std_msgs
+    geometry_msgs
+)
 #########################################################
+
+# Declare our catkin package.
+catkin_package(
+   INCLUDE_DIRS ${robocontroller_INC_DIRS}
+#  LIBRARIES robocontroller
+   CATKIN_DEPENDS geometry_msgs message_runtime std_msgs std_srvs
+#  DEPENDS system_lib
+)
 
 #########################################################
 # INCLUDES
@@ -41,6 +47,8 @@ include_directories(
 	${robocontroller_INC_DIRS}
 )
 #########################################################
+
+
 
 #########################################################
 # SOURCES
