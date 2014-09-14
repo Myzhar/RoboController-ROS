@@ -9,6 +9,91 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
     mRbCtrl = rbCtrl;
 }
 
+bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
+{
+    // >>>>> Telemetry update
+    // WORD_TENSIONE_ALIM 8
+    // WORD_ENC1_SPEED 20
+    // WORD_ENC2_SPEED 21
+    // WORD_RD_PWM_CH1 22
+    // WORD_RD_PWM_CH2 23
+
+    uint16_t startAddr = WORD_ENC1_SPEED;
+    uint16_t nReg = 4;
+
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for motors is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        return false;
+    }
+
+    double speed0;
+    if(reply[2] < 32767)  // Speed is integer 2-complement!
+        speed0 = ((double)reply[2])/1000.0;
+    else
+        speed0 = ((double)(reply[2]-65536))/1000.0;
+    telemetry.LinSpeedLeft = speed0;
+
+    double speed1;
+    if(reply[3] < 32767)  // Speed is integer 2-complement!
+        speed1 = ((double)reply[3])/1000.0;
+    else
+        speed1 = ((double)(reply[3]-65536))/1000.0;
+    mTelemetry.LinSpeedRight = speed1;
+
+    telemetry.PwmLeft = reply[4];
+    telemetry.PwmRight = reply[5];
+
+    // TODO mTelemetry.RpmLeft = // CALCULATE!!!
+    // TODO mTelemetry.RpmRight = // CALCULATE!!!
+
+    startAddr = WORD_TENSIONE_ALIM;
+    nReg = 1;
+    reply = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for battery is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        return false;
+    }
+
+    telemetry.Battery = ((double)reply[2])/1000.0;
+
+    return true;
+}
+
+bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
+{
+    uint16_t startAddr = WORD_ENC1_SPEED;
+    uint16_t nReg = 2;
+
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for motor speeds is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        return false;
+    }
+
+
+    if(reply[2] < 32767)  // Speed is integer 2-complement!
+        speedL = ((double)reply[2])/1000.0;
+    else
+        speedL = ((double)(reply[2]-65536))/1000.0;
+
+    if(reply[3] < 32767)  // Speed is integer 2-complement!
+        speedR = ((double)reply[3])/1000.0;
+    else
+        speedR = ((double)(reply[3]-65536))/1000.0;
+
+    mTelemetry.LinSpeedLeft = speedL;
+    mTelemetry.LinSpeedRight = speedR;
+
+    return true;
+}
+
 bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
 {
     // TODO Verify that RoboController is in PID mode

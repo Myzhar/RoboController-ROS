@@ -13,8 +13,8 @@ class RbCtrlIface
 
 public:
     RbCtrlIface( int boardIdx, string serialPort,
-                              int serialbaudrate, char parity,
-                              int data_bit, int stop_bit, bool simulMode = false );
+                 int serialbaudrate, char parity,
+                 int data_bit, int stop_bit, bool simulMode = false );
     virtual ~RbCtrlIface();
 
 public:
@@ -33,15 +33,15 @@ public:
     inline bool isConnected(){return mBoardConnected;} ///< Returns true if the board is connected
 
 private:
-    modbus_t*       mModbus;  ///< ModBus protocol implementation
-    uint16_t          mBoardIdx;      /// Id of the connected board
+    modbus_t*   mModbus;  ///< ModBus protocol implementation
+    uint16_t    mBoardIdx;      /// Id of the connected board
 
-    uint16_t          mReplyBufSize; ///< current size of the reply buffer
-    uint16_t*         mReplyBuffer;  ///< dinamic reply buffer (resized only if necessary)
+    uint16_t    mReplyBufSize; ///< current size of the reply buffer
+    uint16_t*   mReplyBuffer;  ///< dinamic reply buffer (resized only if necessary)
 
-    bool            mBoardConnected; ///< Indicates if the RbCtrlIface board is connected
+    bool        mBoardConnected; ///< Indicates if the RbCtrlIface board is connected
 
-    bool            mSimulActive; ///< Indicates if RbCtrlIface is simulated
+    bool        mSimulActive; ///< Indicates if RbCtrlIface is simulated
 };
 
 #endif

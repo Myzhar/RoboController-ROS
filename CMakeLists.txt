@@ -4,10 +4,12 @@ project(robocontroller)
 
 set(ROS_BUILD_TYPE Debug)
 
-find_package(catkin REQUIRED COMPONENTS 
-	roscpp
-	std_msgs
-	std_srvs
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  std_msgs
+  std_srvs
+  message_generation
+  geometry_msgs
 )
 
 # Declare our catkin package.
@@ -17,6 +19,14 @@ catkin_package(
    CATKIN_DEPENDS geometry_msgs message_runtime std_msgs std_srvs
 #  DEPENDS system_lib
 )
+
+#########################################################
+# MESSAGES
+add_message_files(
+    FILES
+    Telemetry.msg
+)
+#########################################################
 
 #########################################################
 # INCLUDES

@@ -43,7 +43,6 @@ void vel_cmd_callback( const geometry_msgs::Twist& msg )
 
 }
 
-
 void test_connection()
 {
     ROS_INFO_STREAM("Testing RoboController connection");

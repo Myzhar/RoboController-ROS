@@ -28,7 +28,7 @@ RbCtrlIface::RbCtrlIface(int boardIdx, string serialPort,
     {
         // >>>>> MOD_BUS serial communication settings
 
-        ROS_INFO_STREAM( (count+1) << "Initializing connection to RbCtrlIface Id: " << mBoardIdx );
+        ROS_INFO_STREAM( (count+1) << ") Initializing connection to RbCtrlIface Id: " << mBoardIdx );
 
         while( !initializeSerialModbus( serialPort.c_str(),
                                         serialbaudrate, parity, data_bit, stop_bit ) &&
@@ -39,7 +39,7 @@ RbCtrlIface::RbCtrlIface(int boardIdx, string serialPort,
 
             count++;
 
-            ROS_INFO_STREAM( (count+1) << "Initializing connection to RbCtrlIface Id: " << mBoardIdx );
+            ROS_INFO_STREAM( (count+1) << ") Initializing connection to RbCtrlIface Id: " << mBoardIdx );
             ros::Duration(1).sleep(); // sleep for a second
         }
 

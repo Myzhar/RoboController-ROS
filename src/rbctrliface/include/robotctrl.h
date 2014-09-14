@@ -3,6 +3,7 @@
 
 #include <ros/ros.h>
 #include "rbctrliface.h"
+#include "rc_common.h"
 
 class RobotCtrl
 {
@@ -12,6 +13,10 @@ public:
     bool setMotorSpeeds(double speedL, double speedR );
     bool stopMotors();
 
+    bool getMotorSpeeds(double &speedL, double &speedR );
+
+    bool getTelemetry( RobotTelemetry& telemetry);
+
     inline bool isMotorStopped(){return mMotStopped;}
 
 private:
@@ -19,6 +24,8 @@ private:
     RbCtrlIface* mRbCtrl;
 
     bool mMotStopped;
+
+    RobotTelemetry mTelemetry;
 };
 
 #endif // ROBOTCTRL_H
