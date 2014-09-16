@@ -117,9 +117,20 @@ bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
     return true;
 }
 
+bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )
+{
+    double speedL = fwSpeed + 0.5 * rotSpeed * mConfig.WheelBase/1000.0;
+    double speedR = fwSpeed - 0.5 * rotSpeed * mConfig.WheelBase/1000.0;
+
+    ROS_DEBUG_STREAM( "fwSpeed: " << fwSpeed << " ; rotSpeed: " << rotSpeed << " m/sec" );
+    ROS_DEBUG_STREAM( "speedL: " << speedL << " ; speedR: " << speedR << " m/sec" );
+
+    return setMotorSpeeds( speedL, speedR );
+}
+
 bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
 {
-    // TODO Verify that RoboController is in PID mode
+    // TODO Verify that RoboController is in PID mode (make a service for the status)
 
     if( mMotStopped )
         mLastTelemTime = ros::Time::now();

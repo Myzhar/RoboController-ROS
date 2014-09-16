@@ -33,15 +33,10 @@ void vel_cmd_callback( const geometry_msgs::Twist& msg )
 
     ROS_INFO_STREAM( "Received Twist. [v: " << v << "; omega: " << omega <<"]" );
 
-    double D = 0.4; // TODO replace with real dimension of the robot!
-
-    double Vr = v - 0.5 * omega * D;
-    double Vl = v + 0.5 * omega * D;
-
-    ROS_INFO_STREAM( "Vr: " << Vr << " ; Vl: " << Vl << " m/sec" );
-
-    rbCtrl->setMotorSpeeds( Vl, Vr );
-
+    if( !rbCtrl->setRobotSpeed( v, omega ) )
+    {
+        ROS_ERROR_STREAM( "Robot Speed not set!" );
+    }
 }
 
 void test_connection()

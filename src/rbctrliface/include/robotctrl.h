@@ -10,6 +10,7 @@ class RobotCtrl
 public:
     RobotCtrl(ros::NodeHandle* nh,RbCtrlIface* rbCtrl);
 
+    bool setRobotSpeed( double fwSpeed, double rotSpeed );
     bool setMotorSpeeds(double speedL, double speedR );
     bool stopMotors();
 
