@@ -7,6 +7,10 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
     mMotStopped = true;
 
     mRbCtrl = rbCtrl;
+
+    mPose.x = 0.0;
+    mPose.y = 0.0;
+    mPose.theta = 0.0;
 }
 
 bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
@@ -41,7 +45,7 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
         speed1 = ((double)reply[3])/1000.0;
     else
         speed1 = ((double)(reply[3]-65536))/1000.0;
-    mTelemetry.LinSpeedRight = speed1;
+    telemetry.LinSpeedRight = speed1;
 
     telemetry.PwmLeft = reply[4];
     telemetry.PwmRight = reply[5];
@@ -61,7 +65,26 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
 
     telemetry.Battery = ((double)reply[2])/1000.0;
 
+    memcpy( &mTelemetry, &telemetry, sizeof(RobotTelemetry) );
+
+    double v = (telemetry.LinSpeedLeft + telemetry.LinSpeedRight)/2.0;
+    double omega = (telemetry.LinSpeedLeft + telemetry.LinSpeedRight)/((double)mConfig.WheelBase/1000.0);
+
+    ros::Time now = ros::Time::now();
+
+    double dt = (now - mLastTelemTime).toSec();
+    mLastTelemTime = now;
+
+    mPose.theta += omega * dt;
+    mPose.x += v * cos( mPose.theta ) * dt;
+    mPose.y += v * sin( mPose.theta ) * dt;
+
     return true;
+}
+
+void RobotCtrl::getPose( RobotPose& pose)
+{
+    memcpy( &pose, &mPose, sizeof(RobotPose) );
 }
 
 bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
@@ -97,6 +120,9 @@ bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
 bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
 {
     // TODO Verify that RoboController is in PID mode
+
+    if( mMotStopped )
+        mLastTelemTime = ros::Time::now();
 
     // >>>>> 16 bit saturation
     if( speedL > 32.767)

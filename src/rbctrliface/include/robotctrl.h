@@ -16,6 +16,7 @@ public:
     bool getMotorSpeeds(double &speedL, double &speedR );
 
     bool getTelemetry( RobotTelemetry& telemetry);
+    void getPose( RobotPose& pose); // Get the latest pose updated by Telemetry
 
     inline bool isMotorStopped(){return mMotStopped;}
 
@@ -26,6 +27,11 @@ private:
     bool mMotStopped;
 
     RobotTelemetry mTelemetry;
+    RobotPose mPose;
+
+    RobotConfiguration mConfig;
+
+    ros::Time mLastTelemTime;
 };
 
 #endif // ROBOTCTRL_H

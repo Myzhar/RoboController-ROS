@@ -3,6 +3,7 @@
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
 #include <robocontroller/Telemetry.h>
+#include <robocontroller/Pose.h>
 #include <stdlib.h>
 
 #include "rbctrliface.h"
@@ -70,6 +71,10 @@ int main( int argc, char **argv)
     ros::Publisher telem_pub = nh.advertise<robocontroller::Telemetry>( "/robocontroller/Telemetry", 100 );
     robocontroller::Telemetry telemetry_msg;
 
+    // Publisher for the Pose of the robot
+    ros::Publisher pose_pub = nh.advertise<robocontroller::Pose>( "/robocontroller/Pose", 100 );
+    robocontroller::Pose pose_msg;
+
     // >>>>> Interface to RoboController board
 
     // TODO load params using ROS parameters
@@ -105,9 +110,10 @@ int main( int argc, char **argv)
 
         // >>>>> Publishing Telemetry at 30Hz
         RobotTelemetry roboTelemetry;
+        RobotPose roboPose;
         if( rbCtrl->getTelemetry( roboTelemetry ) )
         {
-            telemetry_msg.header.stamp = ros::Time::now();
+            pose_msg.header.stamp = telemetry_msg.header.stamp = ros::Time::now();
             telemetry_msg.mot_pwm_left = roboTelemetry.PwmLeft;
             telemetry_msg.mot_pwm_right = roboTelemetry.PwmRight;
             telemetry_msg.mot_rpm_left = roboTelemetry.RpmLeft;
@@ -115,9 +121,20 @@ int main( int argc, char **argv)
             telemetry_msg.mot_speed_right = roboTelemetry.LinSpeedRight;
             telemetry_msg.battery = roboTelemetry.Battery;
 
+            // Telemetry publishing
             telem_pub.publish( telemetry_msg );
 
+            rbCtrl->getPose( roboPose );
+
+            pose_msg.X = roboPose.x;
+            pose_msg.Y = roboPose.y;
+            pose_msg.Theta = roboPose.theta;
+
+            // Pose publishing
+            pose_pub.publish( pose_msg );
+
             ROS_DEBUG_STREAM( "Telemetry ID " << telemetry_msg.header.seq << "published" );
+            ROS_DEBUG_STREAM( "Pose ID " << pose_msg.header.seq << "published" );
         }
         else
         {
