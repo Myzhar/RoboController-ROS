@@ -137,8 +137,8 @@ typedef struct _RobotTelemetry
 } RobotTelemetry;
 
 /**
-  * @struct _RobotTelemetry
-  * @brief Used to keep track of the telemetry of the robot
+  * @struct _RobotPose
+  * @brief Used to keep track of the pose of the robot over the time
   */
 typedef struct _RobotPose
 {

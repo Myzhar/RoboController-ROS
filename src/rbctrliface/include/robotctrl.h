@@ -21,11 +21,18 @@ public:
 
     inline bool isMotorStopped(){return mMotStopped;}
 
+    void enableSpeedFilter(bool enable){mSpeedFilterActive=true;}
+    bool isSpeedFilterEnabled(){return mSpeedFilterActive;}
+
+private:
+    void initSpeedFilter();
+
 private:
     ros::NodeHandle* mNodeH;
     RbCtrlIface* mRbCtrl;
 
     bool mMotStopped;
+    bool mSpeedFilterActive;
 
     RobotTelemetry mTelemetry;
     RobotPose mPose;
@@ -33,6 +40,13 @@ private:
     RobotConfiguration mConfig;
 
     ros::Time mLastTelemTime;
+
+    vector<double> mMotorSpeedVecLeft;
+    vector<double> mMotorSpeedVecRight;
+    double mMotorSpeedLeftSum;
+    double mMotorSpeedRightSum;
+    int mSpeedCount;
+    uint8_t speedVecIdx;
 };
 
 #endif // ROBOTCTRL_H

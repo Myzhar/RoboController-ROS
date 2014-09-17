@@ -1,6 +1,8 @@
 #include "robotctrl.h"
 #include "modbus_registers.h"
 
+#define SPEED_FILTER_SIZE 10
+
 RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
 {
     mNodeH = nh;
@@ -11,6 +13,10 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
     mPose.x = 0.0;
     mPose.y = 0.0;
     mPose.theta = 0.0;
+
+    mSpeedFilterActive = true;
+
+    initSpeedFilter();
 }
 
 bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
@@ -65,6 +71,50 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
 
     telemetry.Battery = ((double)reply[2])/1000.0;
 
+    // >>>>> Speed Filter
+    if( mSpeedFilterActive)
+    {
+        double speedLeftMean, speedRightMean;
+
+        speedLeftMean = mMotorSpeedLeftSum/mSpeedCount;
+        speedRightMean = mMotorSpeedRightSum/mSpeedCount;
+
+        // >>>>> Evaluate Thresholds
+        double threshLeft, threshRight;
+
+        threshLeft = fabs( speedLeftMean/10.0 );
+        threshRight = fabs( speedRightMean/10.0 );
+        // <<<< Evaluate Thresholds
+
+        if( fabs(telemetry.LinSpeedLeft-speedLeftMean)>threshLeft )
+        {
+            telemetry.LinSpeedLeft = speedLeftMean;
+        }
+
+        if( fabs(telemetry.LinSpeedRight-speedRightMean)>threshRight )
+        {
+            telemetry.LinSpeedRight = speedRightMean;
+        }
+
+        if( mSpeedCount==SPEED_FILTER_SIZE )
+        {
+            mMotorSpeedLeftSum -= mMotorSpeedVecLeft[speedVecIdx];
+            mMotorSpeedRightSum -= mMotorSpeedVecRight[speedVecIdx];
+        }
+        else
+            mSpeedCount++;
+
+        mMotorSpeedLeftSum += telemetry.LinSpeedLeft;
+        mMotorSpeedRightSum += telemetry.LinSpeedRight;
+
+        mMotorSpeedVecLeft[speedVecIdx] = telemetry.LinSpeedLeft;
+        mMotorSpeedVecRight[speedVecIdx] = telemetry.LinSpeedRight;
+
+        speedVecIdx++;
+        speedVecIdx %= SPEED_FILTER_SIZE;
+    }
+    // <<<<< Speed Filter
+
     memcpy( &mTelemetry, &telemetry, sizeof(RobotTelemetry) );
 
     double v = (telemetry.LinSpeedLeft + telemetry.LinSpeedRight)/2.0;
@@ -115,6 +165,18 @@ bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
     mTelemetry.LinSpeedRight = speedR;
 
     return true;
+}
+
+void RobotCtrl::initSpeedFilter()
+{
+    // >>>>> Speed Filter Initialization
+    mMotorSpeedVecLeft.resize( SPEED_FILTER_SIZE );
+    mMotorSpeedVecRight.resize( SPEED_FILTER_SIZE );
+    mMotorSpeedLeftSum = 0.0;
+    mMotorSpeedRightSum = 0.0;
+    mSpeedCount = 0;
+    speedVecIdx = 0;
+    // <<<<< Speed Filter Initialization
 }
 
 bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )
@@ -189,6 +251,8 @@ bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
 bool RobotCtrl::stopMotors()
 {
     int count = 0;
+
+    initSpeedFilter();
 
     ros::Rate rate( 30 );
     while( 1 ) // Try to stop the motors 5 times for security!
