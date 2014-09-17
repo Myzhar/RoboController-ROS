@@ -80,7 +80,7 @@ int main( int argc, char **argv)
     char parity = 'N';
     int data_bit = 8;
     int stop_bit = 1;
-    bool simulMode = true;
+    bool simulMode = false;
 
     rbCtrlIface = new RbCtrlIface( boardIdx, serialPort, serialbaudrate, parity, data_bit, stop_bit, simulMode );
 
