@@ -45,8 +45,10 @@ private:
     vector<double> mMotorSpeedVecRight;
     double mMotorSpeedLeftSum;
     double mMotorSpeedRightSum;
-    int mSpeedCount;
-    uint8_t speedVecIdx;
+    int mSpeedRightCount;
+    int mSpeedLeftCount;
+    uint8_t mSpeedLeftVecIdx;
+    uint8_t mSpeedRightVecIdx;
 };
 
 #endif // ROBOTCTRL_H

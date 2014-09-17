@@ -72,47 +72,68 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     telemetry.Battery = ((double)reply[2])/1000.0;
 
     // >>>>> Speed Filter
+    ROS_WARN_STREAM( "Before filtering: "<< mSpeedLeftCount << " "  << mSpeedRightCount << " "  << telemetry.LinSpeedLeft << " " << telemetry.LinSpeedRight );
+
     if( mSpeedFilterActive)
     {
         double speedLeftMean, speedRightMean;
 
-        speedLeftMean = mMotorSpeedLeftSum/mSpeedCount;
-        speedRightMean = mMotorSpeedRightSum/mSpeedCount;
+        speedLeftMean = mMotorSpeedLeftSum/mSpeedLeftCount;
+        speedRightMean = mMotorSpeedRightSum/mSpeedRightCount;
 
         // >>>>> Evaluate Thresholds
         double threshLeft, threshRight;
 
-        threshLeft = fabs( speedLeftMean/10.0 );
-        threshRight = fabs( speedRightMean/10.0 );
+        threshLeft = fabs( speedLeftMean/5.0 );
+        threshRight = fabs( speedRightMean/5.0 );
         // <<<< Evaluate Thresholds
 
-        if( fabs(telemetry.LinSpeedLeft-speedLeftMean)>threshLeft )
+
+
+        if( telemetry.LinSpeedLeft > 0.01)
         {
-            telemetry.LinSpeedLeft = speedLeftMean;
+            if( telemetry.LinSpeedLeft != 0.0 && fabs(telemetry.LinSpeedLeft-speedLeftMean)>threshLeft )
+            {
+                telemetry.LinSpeedLeft = speedLeftMean;
+            }
+
+            if( mSpeedLeftCount==SPEED_FILTER_SIZE )
+            {
+                mMotorSpeedLeftSum -= mMotorSpeedVecLeft[mSpeedLeftVecIdx];
+            }
+            else
+                mSpeedLeftCount++;
+
+            mMotorSpeedLeftSum += telemetry.LinSpeedLeft;
+            mMotorSpeedVecLeft[mSpeedLeftVecIdx] = telemetry.LinSpeedLeft;
+
+            mSpeedLeftVecIdx++;
+            mSpeedLeftVecIdx %= SPEED_FILTER_SIZE;
         }
 
-        if( fabs(telemetry.LinSpeedRight-speedRightMean)>threshRight )
+        if( telemetry.LinSpeedRight > 0.01 )
         {
-            telemetry.LinSpeedRight = speedRightMean;
+            if( fabs(telemetry.LinSpeedRight-speedRightMean)>threshRight )
+            {
+                telemetry.LinSpeedRight = speedRightMean;
+            }
+
+            if( mSpeedRightCount==SPEED_FILTER_SIZE )
+            {
+                mMotorSpeedRightSum -= mMotorSpeedVecRight[mSpeedRightVecIdx];
+            }
+            else
+                mSpeedRightCount++;
+
+            mMotorSpeedRightSum += telemetry.LinSpeedRight;
+            mMotorSpeedVecRight[mSpeedRightVecIdx] = telemetry.LinSpeedRight;
+
+            mSpeedRightVecIdx++;
+            mSpeedRightVecIdx %= SPEED_FILTER_SIZE;
         }
-
-        if( mSpeedCount==SPEED_FILTER_SIZE )
-        {
-            mMotorSpeedLeftSum -= mMotorSpeedVecLeft[speedVecIdx];
-            mMotorSpeedRightSum -= mMotorSpeedVecRight[speedVecIdx];
-        }
-        else
-            mSpeedCount++;
-
-        mMotorSpeedLeftSum += telemetry.LinSpeedLeft;
-        mMotorSpeedRightSum += telemetry.LinSpeedRight;
-
-        mMotorSpeedVecLeft[speedVecIdx] = telemetry.LinSpeedLeft;
-        mMotorSpeedVecRight[speedVecIdx] = telemetry.LinSpeedRight;
-
-        speedVecIdx++;
-        speedVecIdx %= SPEED_FILTER_SIZE;
     }
+
+    ROS_WARN_STREAM( "After filtering: " << mSpeedLeftCount << " "  << mSpeedRightCount << " "  << telemetry.LinSpeedLeft << " " << telemetry.LinSpeedRight );
     // <<<<< Speed Filter
 
     memcpy( &mTelemetry, &telemetry, sizeof(RobotTelemetry) );
@@ -174,8 +195,10 @@ void RobotCtrl::initSpeedFilter()
     mMotorSpeedVecRight.resize( SPEED_FILTER_SIZE );
     mMotorSpeedLeftSum = 0.0;
     mMotorSpeedRightSum = 0.0;
-    mSpeedCount = 0;
-    speedVecIdx = 0;
+    mSpeedLeftCount = 0;
+    mSpeedLeftVecIdx = 0;
+    mSpeedRightCount = 0;
+    mSpeedRightVecIdx = 0;
     // <<<<< Speed Filter Initialization
 }
 
