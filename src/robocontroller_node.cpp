@@ -56,12 +56,8 @@ int main( int argc, char **argv)
     ros::init( argc, argv, "robocontroller_node" );
     ros::NodeHandle nh;
 
-    // Subscribing to cmd_vel message in geometry_msgs topic
-    // Only 3 messages in queue since movement commands must be replace by newest
-    ros::Subscriber cmd_vel_sub = nh.subscribe( "/robocontroller/cmd_vel", 3, &vel_cmd_callback );
-
-    // Subscription to use Turtle keyboard node
-    ros::Subscriber cmd_vel_turtle_sub = nh.subscribe( "/turtle1/cmd_vel", 3, &vel_cmd_callback );
+    // Subscription to use standard "cmd_vel" speed commands
+    ros::Subscriber cmd_vel_sub = nh.subscribe( "/cmd_vel", 3, &vel_cmd_callback );
 
     // Publisher for the Telemetry of the robot
     ros::Publisher telem_pub = nh.advertise<robocontroller::Telemetry>( "/robocontroller/Telemetry", 100 );

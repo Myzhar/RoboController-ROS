@@ -29,6 +29,7 @@ public:
 private:
     void initSpeedFilter();
     void updateMeanVar();
+    void applySpeedFilter();
 
 private:
     ros::NodeHandle* mNodeH;
@@ -53,8 +54,8 @@ private:
     double mSpeedVarRight;
     int mSpeedRightCount;
     int mSpeedLeftCount;
-    uint8_t mSpeedLeftVecIdx;
-    uint8_t mSpeedRightVecIdx;
+    int mSpeedLeftVecIdx;
+    int mSpeedRightVecIdx;
     // <<<<< Speed Filter
 };
 
