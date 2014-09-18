@@ -88,7 +88,7 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
 
         if( telemetry.LinSpeedLeft > 0.01)
         {
-            if( fabs(telemetry.LinSpeedLeft-mSpeedMeanLeft)>threshLeft )
+            if( mSpeedLeftCount > 3 && fabs(telemetry.LinSpeedLeft-mSpeedMeanLeft)>threshLeft )
             {
                 telemetry.LinSpeedLeft = mSpeedMeanLeft;
             }
@@ -102,20 +102,20 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
             mSpeedLeftVecIdx %= SPEED_FILTER_SIZE;
         }
 
-        if( telemetry.LinSpeedLeft > 0.01)
+        if( telemetry.LinSpeedRight > 0.01)
         {
-            if( fabs(telemetry.LinSpeedLeft-mSpeedMeanLeft)>threshLeft )
+            if( mSpeedRightCount > 3 && fabs(telemetry.LinSpeedRight-mSpeedMeanRight)>threshRight )
             {
-                telemetry.LinSpeedLeft = mSpeedMeanLeft;
+                telemetry.LinSpeedRight = mSpeedMeanRight;
             }
 
-            if( mSpeedLeftCount<SPEED_FILTER_SIZE )
-                mSpeedLeftCount++;
+            if( mSpeedRightCount<SPEED_FILTER_SIZE )
+                mSpeedRightCount++;
 
-            mMotorSpeedVecLeft[mSpeedLeftVecIdx] = telemetry.LinSpeedLeft;
+            mMotorSpeedVecRight[mSpeedRightVecIdx] = telemetry.LinSpeedRight;
 
-            mSpeedLeftVecIdx++;
-            mSpeedLeftVecIdx %= SPEED_FILTER_SIZE;
+            mSpeedRightVecIdx++;
+            mSpeedRightVecIdx %= SPEED_FILTER_SIZE;
         }
     }
 
