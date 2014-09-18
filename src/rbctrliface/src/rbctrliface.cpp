@@ -8,6 +8,8 @@
 #define WORD_TEST_BOARD 0
 #define INITIAL_REPLY_BUFFER_SIZE 20
 
+namespace robocontroller
+{
 
 RbCtrlIface::RbCtrlIface(int boardIdx, string serialPort,
                          int serialbaudrate, char parity,
@@ -329,4 +331,6 @@ bool RbCtrlIface::writeMultiReg( uint16_t startAddr, uint16_t nReg,
     }
     //mBoardMutex.unlock();
     return true;
+}
+
 }

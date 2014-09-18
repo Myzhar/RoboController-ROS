@@ -9,6 +9,9 @@
 
 using namespace std;
 
+namespace robocontroller
+{
+
 /**
  * @enum MotorCtrlMode
  * @brief Motor control modes.
@@ -146,5 +149,7 @@ typedef struct _RobotPose
     double y;                   /**< Coordinate Y */
     double theta;               /**< Orientation */
 } RobotPose;
+
+}
 
 #endif // RC_MSG_SRV_H

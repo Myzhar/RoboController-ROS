@@ -11,6 +11,7 @@
 #include "modbus_registers.h"
 
 using namespace std;
+using namespace robocontroller;
 
 ros::Time last_vel_cmd_time; // Time of the last velocity comand received
 double vel_cmd_timeout_sec; // Timeout for motor stop if non velocity command is received

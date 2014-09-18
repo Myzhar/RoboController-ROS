@@ -8,6 +8,9 @@
 
 using namespace std;
 
+namespace robocontroller
+{
+
 class RbCtrlIface 
 {
 
@@ -43,5 +46,7 @@ private:
 
     bool        mSimulActive; ///< Indicates if RbCtrlIface is simulated
 };
+
+}
 
 #endif

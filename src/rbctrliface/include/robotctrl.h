@@ -5,6 +5,8 @@
 #include "rbctrliface.h"
 #include "rc_msg_srv.h"
 
+namespace robocontroller
+{
 class RobotCtrl
 {
 public:
@@ -33,7 +35,6 @@ private:
     RbCtrlIface* mRbCtrl;
 
     bool mMotStopped;
-    bool mSpeedFilterActive;
 
     RobotTelemetry mTelemetry;
     RobotPose mPose;
@@ -42,6 +43,8 @@ private:
 
     ros::Time mLastTelemTime;
 
+    // >>>>> Speed Filter
+    bool mSpeedFilterActive;
     vector<double> mMotorSpeedVecLeft;
     vector<double> mMotorSpeedVecRight;
     double mSpeedMeanLeft;
@@ -52,6 +55,9 @@ private:
     int mSpeedLeftCount;
     uint8_t mSpeedLeftVecIdx;
     uint8_t mSpeedRightVecIdx;
+    // <<<<< Speed Filter
 };
+
+}
 
 #endif // ROBOTCTRL_H

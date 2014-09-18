@@ -1,6 +1,9 @@
 #include "robotctrl.h"
 #include "modbus_registers.h"
 
+namespace robocontroller
+{
+
 #define SPEED_FILTER_SIZE 10
 
 RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
@@ -345,4 +348,6 @@ bool RobotCtrl::stopMotors()
 
         rate.sleep();
     }
+}
+
 }
