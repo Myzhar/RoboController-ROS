@@ -76,60 +76,43 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
 
     if( mSpeedFilterActive)
     {
-        double speedLeftMean, speedRightMean;
-
-        speedLeftMean = mMotorSpeedLeftSum/mSpeedLeftCount;
-        speedRightMean = mMotorSpeedRightSum/mSpeedRightCount;
-
         // >>>>> Evaluate Thresholds
         double threshLeft, threshRight;
 
-        threshLeft = fabs( speedLeftMean/5.0 );
-        threshRight = fabs( speedRightMean/5.0 );
+        threshLeft = mSpeedVarLeft*5.0;
+        threshRight = mSpeedVarRight*5.0;
         // <<<< Evaluate Thresholds
-
-
 
         if( telemetry.LinSpeedLeft > 0.01)
         {
-            if( telemetry.LinSpeedLeft != 0.0 && fabs(telemetry.LinSpeedLeft-speedLeftMean)>threshLeft )
+            if( fabs(telemetry.LinSpeedLeft-mSpeedMeanLeft)>threshLeft )
             {
-                telemetry.LinSpeedLeft = speedLeftMean;
+                telemetry.LinSpeedLeft = mSpeedMeanLeft;
             }
 
-            if( mSpeedLeftCount==SPEED_FILTER_SIZE )
-            {
-                mMotorSpeedLeftSum -= mMotorSpeedVecLeft[mSpeedLeftVecIdx];
-            }
-            else
+            if( mSpeedLeftCount<SPEED_FILTER_SIZE )
                 mSpeedLeftCount++;
 
-            mMotorSpeedLeftSum += telemetry.LinSpeedLeft;
             mMotorSpeedVecLeft[mSpeedLeftVecIdx] = telemetry.LinSpeedLeft;
 
             mSpeedLeftVecIdx++;
             mSpeedLeftVecIdx %= SPEED_FILTER_SIZE;
         }
 
-        if( telemetry.LinSpeedRight > 0.01 )
+        if( telemetry.LinSpeedLeft > 0.01)
         {
-            if( fabs(telemetry.LinSpeedRight-speedRightMean)>threshRight )
+            if( fabs(telemetry.LinSpeedLeft-mSpeedMeanLeft)>threshLeft )
             {
-                telemetry.LinSpeedRight = speedRightMean;
+                telemetry.LinSpeedLeft = mSpeedMeanLeft;
             }
 
-            if( mSpeedRightCount==SPEED_FILTER_SIZE )
-            {
-                mMotorSpeedRightSum -= mMotorSpeedVecRight[mSpeedRightVecIdx];
-            }
-            else
-                mSpeedRightCount++;
+            if( mSpeedLeftCount<SPEED_FILTER_SIZE )
+                mSpeedLeftCount++;
 
-            mMotorSpeedRightSum += telemetry.LinSpeedRight;
-            mMotorSpeedVecRight[mSpeedRightVecIdx] = telemetry.LinSpeedRight;
+            mMotorSpeedVecLeft[mSpeedLeftVecIdx] = telemetry.LinSpeedLeft;
 
-            mSpeedRightVecIdx++;
-            mSpeedRightVecIdx %= SPEED_FILTER_SIZE;
+            mSpeedLeftVecIdx++;
+            mSpeedLeftVecIdx %= SPEED_FILTER_SIZE;
         }
     }
 
@@ -193,13 +176,82 @@ void RobotCtrl::initSpeedFilter()
     // >>>>> Speed Filter Initialization
     mMotorSpeedVecLeft.resize( SPEED_FILTER_SIZE );
     mMotorSpeedVecRight.resize( SPEED_FILTER_SIZE );
-    mMotorSpeedLeftSum = 0.0;
-    mMotorSpeedRightSum = 0.0;
     mSpeedLeftCount = 0;
     mSpeedLeftVecIdx = 0;
     mSpeedRightCount = 0;
     mSpeedRightVecIdx = 0;
+    mSpeedMeanLeft = 0.0;
+    mSpeedVarLeft = 0.0;
+    mSpeedMeanRight = 0.0;
+    mSpeedVarRight = 0.0;
     // <<<<< Speed Filter Initialization
+}
+
+void RobotCtrl::updateMeanVar()
+{
+    /*
+    def online_variance(data):
+    n = 0
+    mean = 0
+    M2 = 0
+
+    for x in data:
+        n = n + 1
+        delta = x - mean
+        mean = mean + delta/n
+        M2 = M2 + delta*(x - mean)
+
+    if (n < 2):
+        return 0
+
+    variance = M2/(n - 1)
+    return variance
+    */
+    int n;
+    double M2;
+
+    // >>>>> Left Motor
+    n=0;
+    M2=0.0;
+    mSpeedMeanLeft=0.0;
+
+    for( int i=mSpeedLeftVecIdx; i<mSpeedLeftVecIdx+mSpeedLeftCount; i++ )
+    {
+        int idx = i%SPEED_FILTER_SIZE;
+        n++;
+        double delta = mMotorSpeedVecLeft[idx] - mSpeedMeanLeft;
+        mSpeedMeanLeft += delta/n;
+
+        M2 += delta*(mMotorSpeedVecLeft[idx] - mSpeedMeanLeft);
+    }
+
+    if(n<2)
+        mSpeedVarLeft = 0.0;
+    else
+        mSpeedVarLeft = M2/(n - 1);
+    // <<<<< Left Motor
+
+    // >>>>> Right Motor
+    n=0;
+    M2=0.0;
+    mSpeedMeanRight=0.0;
+
+    for( int i=mSpeedRightVecIdx; i<mSpeedRightVecIdx+mSpeedRightCount; i++ )
+    {
+        int idx = i%SPEED_FILTER_SIZE;
+        n++;
+        double delta = mMotorSpeedVecRight[idx] - mSpeedMeanRight;
+        mSpeedMeanRight += delta/n;
+
+        M2 += delta*(mMotorSpeedVecRight[idx] - mSpeedMeanRight);
+    }
+
+    if(n<2)
+        mSpeedVarRight = 0.0;
+    else
+        mSpeedVarRight = M2/(n - 1);
+    // <<<<< Right Motor
+
 }
 
 bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )

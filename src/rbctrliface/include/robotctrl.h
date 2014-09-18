@@ -26,6 +26,7 @@ public:
 
 private:
     void initSpeedFilter();
+    void updateMeanVar();
 
 private:
     ros::NodeHandle* mNodeH;
@@ -43,8 +44,10 @@ private:
 
     vector<double> mMotorSpeedVecLeft;
     vector<double> mMotorSpeedVecRight;
-    double mMotorSpeedLeftSum;
-    double mMotorSpeedRightSum;
+    double mSpeedMeanLeft;
+    double mSpeedVarLeft;
+    double mSpeedMeanRight;
+    double mSpeedVarRight;
     int mSpeedRightCount;
     int mSpeedLeftCount;
     uint8_t mSpeedLeftVecIdx;
