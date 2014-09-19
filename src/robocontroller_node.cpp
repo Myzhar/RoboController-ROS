@@ -4,6 +4,7 @@
 #include <geometry_msgs/Twist.h>
 #include <robocontroller/Telemetry.h>
 #include <robocontroller/Pose.h>
+#include <robocontroller/Debug.h>
 #include <stdlib.h>
 
 #include "rbctrliface.h"
@@ -67,6 +68,10 @@ int main( int argc, char **argv)
     ros::Publisher pose_pub = nh.advertise<robocontroller::Pose>( "/robocontroller/Pose", 100 );
     robocontroller::Pose pose_msg;
 
+    // Publisher for Debug message
+    ros::Publisher debug_pub = nh.advertise<robocontroller::Debug>( "/robocontroller/Debug", 100 );
+    robocontroller::Debug debug_msg;
+
     // >>>>> Interface to RoboController board
 
     // TODO load params using ROS parameters
@@ -99,6 +104,22 @@ int main( int argc, char **argv)
     while( ros::ok() )
     {
         ros::spinOnce(); // Process pending callback
+
+        // >>>>> Debug message
+        if( debug_pub.getNumSubscribers()>0 )
+        {
+            RcDebug debugInfo;
+            if( rbCtrl->getDebugInfo( debugInfo ) )
+            {
+                debug_msg.enc1_period = debugInfo.enc1_period;
+                debug_msg.enc2_period = debugInfo.enc2_period;
+
+                debug_pub.publish( debug_msg );
+
+                ROS_INFO_STREAM( "Published Debug information");
+            }
+        }
+        // <<<<< Debug message
 
         // >>>>> Publishing Telemetry at 30Hz
         RobotTelemetry roboTelemetry;

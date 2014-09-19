@@ -21,6 +21,8 @@ public:
     bool getTelemetry( RobotTelemetry& telemetry);
     void getPose( RobotPose& pose); // Get the latest pose updated by Telemetry
 
+    bool getDebugInfo( RcDebug& debug);
+
     inline bool isMotorStopped(){return mMotStopped;}
 
     void enableSpeedFilter(bool enable){mSpeedFilterActive=true;}

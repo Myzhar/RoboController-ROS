@@ -18,6 +18,7 @@ add_message_files(
     FILES
     Telemetry.msg
     Pose.msg
+    Debug.msg
 )
 
 generate_messages(

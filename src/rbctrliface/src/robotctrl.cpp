@@ -24,6 +24,23 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
     initSpeedFilter();
 }
 
+bool RobotCtrl::getDebugInfo( RcDebug& debug )
+{
+    uint16_t startAddr = WORD_ENC1_PERIOD;
+    uint16_t nReg = 2;
+
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for debug is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        return false;
+    }
+
+    debug.enc1_period = reply[2];
+    debug.enc2_period = reply[3];
+}
+
 bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
 {
     // >>>>> Telemetry update

@@ -150,6 +150,16 @@ typedef struct _RobotPose
     double theta;               /**< Orientation */
 } RobotPose;
 
+/**
+  * @struct _RcDebug
+  * @brief Used to get information of RoboController register state
+  */
+typedef struct _RcDebug
+{
+    u_int16_t enc1_period;      /**< WORD_ENC1_PERIOD */
+    u_int16_t enc2_period;      /**< WORD_ENC2_PERIOD */
+} RcDebug;
+
 }
 
 #endif // RC_MSG_SRV_H
