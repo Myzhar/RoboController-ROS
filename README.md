@@ -6,7 +6,7 @@ RoboController-ROS on ROS Indigo.
 
 There are two robots controlled by RoboController board:
 * **MyzharBot** [Official Blog](http://myzharbot.robot-home.it) - [Officine Robotiche](http://2014.officinerobotiche.it/myzharbot/)
-* **WoodyBot]** [Official Blog](http://tuttoelettronica.net/archives/755) - [Officine Robotiche](http://2014.officinerobotiche.it/woodybot/)
+* **WoodyBot** [Official Blog](http://tuttoelettronica.net/archives/755) - [Officine Robotiche](http://2014.officinerobotiche.it/woodybot/)
 
 Installation
 ------------
