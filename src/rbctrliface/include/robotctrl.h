@@ -29,7 +29,7 @@ public:
 private:
     void initSpeedFilter();
     void updateMeanVar();
-    void applySpeedFilter();
+    void applySpeedFilter(RobotTelemetry& telemetry);
 
 private:
     ros::NodeHandle* mNodeH;

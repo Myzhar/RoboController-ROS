@@ -79,7 +79,7 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     // >>>>> Speed Filter
     // Eliminates glitches due to uncorrect speed reading on the RoboController
     if( mSpeedFilterActive)
-        applySpeedFilter();
+        applySpeedFilter(telemetry);
     // <<<<< Speed Filter
 
     memcpy( &mTelemetry, &telemetry, sizeof(RobotTelemetry) );
@@ -152,7 +152,7 @@ void RobotCtrl::initSpeedFilter()
     // <<<<< Speed Filter Initialization
 }
 
-void RobotCtrl::applySpeedFilter()
+void RobotCtrl::applySpeedFilter(RobotTelemetry &telemetry)
 {
     bool replaceLeft = false;
     bool replaceRight = false;
