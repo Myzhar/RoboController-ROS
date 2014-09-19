@@ -22,7 +22,10 @@ Installation
 Usage
 -----
 You are now ready to start *robocontroller_node*:
-* *rosrun robocontroller robocontroller_node*
+* *rosrun robocontroller robocontroller_node* to run the node with default params
+* *roslaunch robocontroller robocontroller_simul.launch* to run the node in simulation mode
+* *roslaunch robocontroller robocontroller_myzharbot.launch* to run the node with parameters for MyzharBot
+* copy and modify *yaml* files in *config* folder to configure your robot
 * you can control the robot using Qt widget provided by **rqt** package: (i.e. launch *rqt*, add a *Robot Steering" widget, the message should be * /cmd_vel *)
 * you can plot the Telemetry and the Pose of the robot adding one or more **plot** widgets and subscribing to the messages * /robocontroller/Telemetry * and * /robocontroller/Pose *
 
