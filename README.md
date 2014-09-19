@@ -4,7 +4,9 @@ RoboController-ROS
 **RoboController-ROS** allows to the robots based on **RoboController board** to be controlled by ROS framework.
 RoboController-ROS on ROS Indigo.
 
-One of the robot based on RoboController board is [MyzharBot](http://myzharbot.robot-home.it)
+There are two robots controlled by RoboController board:
+* **MyzharBot** [Official Blog](http://myzharbot.robot-home.it) - [Officine Robotiche](http://2014.officinerobotiche.it/myzharbot/)
+* **WoodyBot]** [Official Blog](http://tuttoelettronica.net/archives/755) - [Officine Robotiche](http://2014.officinerobotiche.it/woodybot/)
 
 Installation
 ------------
