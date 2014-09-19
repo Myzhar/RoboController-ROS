@@ -28,6 +28,8 @@ public:
     void enableSpeedFilter(bool enable){mSpeedFilterActive=true;}
     bool isSpeedFilterEnabled(){return mSpeedFilterActive;}
 
+    bool setRobotConfig( RobotConfiguration& config );
+
 private:
     void initSpeedFilter();
     void updateMeanVar();
@@ -42,7 +44,7 @@ private:
     RobotTelemetry mTelemetry;
     RobotPose mPose;
 
-    RobotConfiguration mConfig;
+    RobotConfiguration mRobotConfig;
 
     ros::Time mLastTelemTime;
 

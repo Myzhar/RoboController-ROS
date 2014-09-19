@@ -15,10 +15,28 @@ using namespace std;
 using namespace robocontroller;
 
 ros::Time last_vel_cmd_time; // Time of the last velocity comand received
-double vel_cmd_timeout_sec; // Timeout for motor stop if non velocity command is received
+
+// >>>>> Global params
+double telem_freq = 30;
+double vel_cmd_timeout_sec = 0.5; // Timeout for motor stop if non velocity command is received
+// <<<<< Global params
 
 RbCtrlIface* rbCtrlIface= NULL; // RoboController Interface
 RobotCtrl* rbCtrl = NULL; // Robot control functions
+
+// >>>>> Serial port parameters
+int boardIdx = 1;
+string serialPort = "/dev/ttyUSB0";
+int serialbaudrate = 57600;
+string parity = "N";
+int data_bit = 8;
+int stop_bit = 1;
+bool simulMode = true;
+// <<<<< Serial port parameters
+
+// >>>>> Robot Params
+RobotConfiguration rbConf;
+// <<<<< Robot Params
 
 
 // >>>>> Functions
@@ -52,10 +70,234 @@ void test_connection()
     }
 }
 
-int main( int argc, char **argv) 
+void init_system( ros::NodeHandle& nh )
+{
+    string nodeName = ros::this_node::getName();
+    string nameSpace = ros::this_node::getNamespace();
+
+    string paramStr;
+
+    // >>>>> Global
+    paramStr = ( nameSpace + nodeName + "/general/Telemetry_freq");
+    if(nh.hasParam( paramStr ))
+    {
+        nh.getParam(paramStr, telem_freq);
+        ROS_INFO_STREAM( boardIdx );
+    }
+    else
+        nh.setParam(paramStr, telem_freq );
+
+    paramStr = ( nameSpace + nodeName + "/general/Command_timeout");
+    if(nh.hasParam( paramStr ))
+    {
+        nh.getParam(paramStr, vel_cmd_timeout_sec);
+        ROS_INFO_STREAM( boardIdx );
+    }
+    else
+        nh.setParam(paramStr, vel_cmd_timeout_sec );
+    // <<<<< Global
+
+    // >>>>> Serial Port
+    paramStr = ( nameSpace + nodeName + "/rc_serial/Board_Idx");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, boardIdx);
+    else
+        nh.setParam(paramStr, boardIdx );
+
+    paramStr = ( nameSpace + nodeName + "/rc_serial/Serial_Port");
+    if(nh.hasParam( paramStr ))    
+        nh.getParam(paramStr, serialPort);
+    else
+        nh.setParam(paramStr, serialPort );
+
+    paramStr = ( nameSpace + nodeName + "/rc_serial/Baud_Rate");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, serialbaudrate);
+    else
+        nh.setParam(paramStr, serialbaudrate );
+
+    paramStr = ( nameSpace + nodeName + "/rc_serial/Parity");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, parity);
+    else
+        nh.setParam(paramStr, parity );
+
+    paramStr = ( nameSpace + nodeName + "/rc_serial/Data_Bit");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, data_bit);
+    else
+        nh.setParam(paramStr, data_bit );
+
+    paramStr = ( nameSpace + nodeName + "/rc_serial/Stop_Bits");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, stop_bit);
+    else
+        nh.setParam(paramStr, stop_bit );
+
+    paramStr = ( nameSpace + nodeName + "/rc_serial/Simulation_Active");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, simulMode);
+    else
+        nh.setParam(paramStr, simulMode );
+
+    // <<<<< Serial Port
+
+    // >>>>> Robot Params to be saved on RoboController's EEPROM
+    paramStr = ( nameSpace + nodeName + "/robot_param/Weight_g");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.Weight);
+    else
+        nh.setParam(paramStr, 5000 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/Width_mm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.Width);
+    else
+        nh.setParam(paramStr, 420 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/Height_mm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.Height);
+    else
+        nh.setParam(paramStr, 200 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/Lenght_mm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.Lenght);
+    else
+        nh.setParam(paramStr, 365 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/WheelBase_mm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.WheelBase);
+    else
+        nh.setParam(paramStr, 340 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/WheelRadiusLeft_cent_mm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.WheelRadiusLeft);
+    else
+        nh.setParam(paramStr, 3500 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/WheelRadiusRight_cent_mm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.WheelRadiusRight);
+    else
+        nh.setParam(paramStr, 3500 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/EncoderCprLeft");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.EncoderCprLeft);
+    else
+        nh.setParam(paramStr, 400 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/EncoderCprRight");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.EncoderCprRight);
+    else
+        nh.setParam(paramStr, 400 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MaxRpmMotorLeft");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MaxRpmMotorLeft);
+    else
+        nh.setParam(paramStr, 218 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MaxRpmMotorRight");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MaxRpmMotorRight);
+    else
+        nh.setParam(paramStr, 218 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MaxAmpereMotorLeft_mA");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MaxAmpereMotorLeft);
+    else
+        nh.setParam(paramStr, 1650 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MaxAmpereMotorRight_mA");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MaxAmpereMotorRight);
+    else
+        nh.setParam(paramStr, 1650 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MaxTorqueMotorLeft_Ncm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MaxTorqueMotorLeft);
+    else
+        nh.setParam(paramStr, 60 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MaxTorqueMotorRight_Ncm");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MaxTorqueMotorRight);
+    else
+        nh.setParam(paramStr, 60 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/RatioShaftLeft");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.RatioShaftLeft);
+    else
+        nh.setParam(paramStr, 3 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/RatioShaftRight");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.RatioShaftRight);
+    else
+        nh.setParam(paramStr, 3 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/RatioMotorLeft");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.RatioMotorLeft);
+    else
+        nh.setParam(paramStr, 55 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/RatioMotorRight");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.RatioMotorRight);
+    else
+        nh.setParam(paramStr, 55 );
+
+    int val;
+    paramStr = ( nameSpace + nodeName + "/robot_param/MotorEnableLevel");
+    if(nh.hasParam( paramStr ))
+    {
+        nh.getParam(paramStr, val);
+        rbConf.MotorEnableLevel = static_cast<PinLevel>(val);
+    }
+    else
+        nh.setParam(paramStr, 1 );
+
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/EncoderPosition");
+    if(nh.hasParam( paramStr ))
+    {
+        nh.getParam(paramStr, val/*rbConf.EncoderPosition*/);
+        rbConf.EncoderPosition = static_cast<EncoderPos>(val);
+    }
+    else
+        nh.setParam(paramStr, 1 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MaxChargedBatteryLevel_mV");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MaxChargedBatteryLevel);
+    else
+        nh.setParam(paramStr, 16800 );
+
+    paramStr = ( nameSpace + nodeName + "/robot_param/MinChargedBatteryLevel_mV");
+    if(nh.hasParam( paramStr ))
+        nh.getParam(paramStr, rbConf.MinChargedBatteryLevel);
+    else
+        nh.setParam(paramStr, 12000 );
+    // <<<<< Robot Params to be saved on RoboController's EEPROM
+}
+
+int main( int argc, char **argv)
 {
     ros::init( argc, argv, "robocontroller_node" );
     ros::NodeHandle nh;
+
+    // Parameters initialization
+    init_system( nh );
 
     // Subscription to use standard "cmd_vel" speed commands
     ros::Subscriber cmd_vel_sub = nh.subscribe( "/cmd_vel", 3, &vel_cmd_callback );
@@ -73,18 +315,7 @@ int main( int argc, char **argv)
     robocontroller::Debug debug_msg;
 
     // >>>>> Interface to RoboController board
-
-    // TODO load params using ROS parameters
-    vel_cmd_timeout_sec = 1;
-    int boardIdx = 1;
-    string serialPort = "/dev/ttyUSB0";
-    int serialbaudrate = 57600;
-    char parity = 'N';
-    int data_bit = 8;
-    int stop_bit = 1;
-    bool simulMode = false;
-
-    rbCtrlIface = new RbCtrlIface( boardIdx, serialPort, serialbaudrate, parity, data_bit, stop_bit, simulMode );
+    rbCtrlIface = new RbCtrlIface( boardIdx, serialPort, serialbaudrate, parity.c_str()[0], data_bit, stop_bit, simulMode );
 
     if(!rbCtrlIface->isConnected())
     {
@@ -96,8 +327,11 @@ int main( int argc, char **argv)
     // Robot Control functions
     rbCtrl = new RobotCtrl( &nh, rbCtrlIface );
 
+    // Set Robot params
+    rbCtrl->setRobotConfig( rbConf );
+
     // RoboController publishes telemetry at 30hz
-    ros::Rate rate( 30 );
+    ros::Rate rate( telem_freq );
 
     last_vel_cmd_time = ros::Time::now();
 

@@ -26,10 +26,10 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
 
 bool RobotCtrl::getDebugInfo( RcDebug& debug )
 {
-    uint16_t startAddr = WORD_ENC1_PERIOD;
-    uint16_t nReg = 2;
+    u_int16_t startAddr = WORD_ENC1_PERIOD;
+    u_int16_t nReg = 2;
 
-    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply.size() != nReg+2 )
     {
@@ -50,10 +50,10 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     // WORD_RD_PWM_CH1 22
     // WORD_RD_PWM_CH2 23
 
-    uint16_t startAddr = WORD_ENC1_SPEED;
-    uint16_t nReg = 4;
+    u_int16_t startAddr = WORD_ENC1_SPEED;
+    u_int16_t nReg = 4;
 
-    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply.size() != nReg+2 )
     {
@@ -102,7 +102,7 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     memcpy( &mTelemetry, &telemetry, sizeof(RobotTelemetry) );
 
     double v = (telemetry.LinSpeedLeft + telemetry.LinSpeedRight)/2.0;
-    double omega = (telemetry.LinSpeedLeft + telemetry.LinSpeedRight)/((double)mConfig.WheelBase/1000.0);
+    double omega = (telemetry.LinSpeedLeft + telemetry.LinSpeedRight)/((double)mRobotConfig.WheelBase/1000.0);
 
     ros::Time now = ros::Time::now();
 
@@ -123,10 +123,10 @@ void RobotCtrl::getPose( RobotPose& pose)
 
 bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
 {
-    uint16_t startAddr = WORD_ENC1_SPEED;
-    uint16_t nReg = 2;
+    u_int16_t startAddr = WORD_ENC1_SPEED;
+    u_int16_t nReg = 2;
 
-    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply.size() != nReg+2 )
     {
@@ -282,8 +282,8 @@ void RobotCtrl::updateMeanVar()
 
 bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )
 {
-    double speedL = fwSpeed + 0.5 * rotSpeed * mConfig.WheelBase/1000.0;
-    double speedR = fwSpeed - 0.5 * rotSpeed * mConfig.WheelBase/1000.0;
+    double speedL = fwSpeed + 0.5 * rotSpeed * mRobotConfig.WheelBase/1000.0;
+    double speedR = fwSpeed - 0.5 * rotSpeed * mRobotConfig.WheelBase/1000.0;
 
     ROS_DEBUG_STREAM( "fwSpeed: " << fwSpeed << " ; rotSpeed: " << rotSpeed << " m/sec" );
     ROS_DEBUG_STREAM( "speedL: " << speedL << " ; speedR: " << speedR << " m/sec" );
@@ -329,26 +329,26 @@ bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
     // <<<<< 16 bit saturation
 
     // >>>>> New SetPoint to RoboController
-    uint16_t address = WORD_PWM_CH1;
+    u_int16_t address = WORD_PWM_CH1;
 
-    vector<uint16_t> data;
+    vector<u_int16_t> data;
     data.resize(2);
 
-    uint16_t sp; // Speed is integer 2-complement!
+    u_int16_t sp; // Speed is integer 2-complement!
     if(speedL >= 0)
-        sp = (uint16_t)(speedL*1000.0);
+        sp = (u_int16_t)(speedL*1000.0);
     else
-        sp = (uint16_t)(speedL*1000.0+65536.0);
+        sp = (u_int16_t)(speedL*1000.0+65536.0);
 
-    //uint16_t sp = (uint16_t)(speed*1000.0+32767.5);
+    //u_int16_t sp = (u_int16_t)(speed*1000.0+32767.5);
     data[0] = sp;
 
     if(speedR >= 0)
-        sp = (uint16_t)(speedR*1000.0);
+        sp = (u_int16_t)(speedR*1000.0);
     else
-        sp = (uint16_t)(speedR*1000.0+65536.0);
+        sp = (u_int16_t)(speedR*1000.0+65536.0);
 
-    //uint16_t sp = (uint16_t)(speed*1000.0+32767.5);
+    //u_int16_t sp = (u_int16_t)(speed*1000.0+32767.5);
     data[1] = sp;
 
     bool commOk = mRbCtrl->writeMultiReg( address, 2, data );
@@ -385,6 +385,64 @@ bool RobotCtrl::stopMotors()
 
         rate.sleep();
     }
+}
+
+bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
+{
+    memcpy( &mRobotConfig, &config, sizeof(RobotConfiguration) );
+
+    // >>>>> Robot Configuration Data (19 consequtive registers)
+    vector<u_int16_t> data;
+    int nReg = 19;
+    data.resize(nReg);
+    u_int16_t startAddr =  WORD_ROBOT_DIMENSION_WEIGHT;
+
+    data[0]  = mRobotConfig.Weight;
+    data[1]  = mRobotConfig.Width;
+    data[2]  = mRobotConfig.Height;
+    data[3]  = mRobotConfig.Lenght;
+    data[4]  = mRobotConfig.WheelBase;
+    data[5]  = mRobotConfig.WheelRadiusLeft;
+    data[6]  = mRobotConfig.WheelRadiusRight;
+    data[7]  = mRobotConfig.EncoderCprLeft;
+    data[8]  = mRobotConfig.EncoderCprRight;
+    data[9]  = mRobotConfig.MaxRpmMotorLeft;
+    data[10] = mRobotConfig.MaxRpmMotorRight;
+    data[11] = mRobotConfig.MaxAmpereMotorLeft;
+    data[12] = mRobotConfig.MaxAmpereMotorRight;
+    data[13] = mRobotConfig.MaxTorqueMotorLeft;
+    data[14] = mRobotConfig.MaxTorqueMotorRight;
+    data[15] = mRobotConfig.RatioShaftLeft;
+    data[16] = mRobotConfig.RatioShaftRight;
+    data[17] = mRobotConfig.RatioMotorLeft;
+    data[18] = mRobotConfig.RatioMotorRight;
+
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error saving first part of configuration to RoboController EEPROM");
+        return false;
+    }
+    // <<<<< Robot Configuration Data (19 consequtive registers)
+
+    // >>>>> Status Register 2
+    nReg = 1;
+    data.resize(nReg);
+    startAddr = WORD_STATUSBIT2;
+
+    u_int16_t statusVal = 0;
+    if(mRobotConfig.EncoderPosition)
+        statusVal |= FLG_STATUSBI2_EEPROM_ENCODER_POSITION;
+    if(mRobotConfig.MotorEnableLevel)
+        statusVal |= FLG_EEPROM_OUTPUT_DRIVER_ENABLE_POLARITY;
+
+    data[0] = statusVal;
+
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error saving second part of configuration to RoboController EEPROM");
+        return false;
+    }
+    // <<<<< Status Register 2
 }
 
 }

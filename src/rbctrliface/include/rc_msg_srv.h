@@ -92,35 +92,35 @@ typedef struct _BoardStatus
 typedef struct _RobotConfiguration
 {
     // >>>>> Dimensions
-    uint16_t Weight; /**< Robot Weight (g) */
-    uint16_t Width;  /**< Robot Width (mm) */
-    uint16_t Height; /**< Robot Height (mm) */
-    uint16_t Lenght; /**< Robot Lenght (mm) */
+    int Weight; /**< Robot Weight (g) */
+    int Width;  /**< Robot Width (mm) */
+    int Height; /**< Robot Height (mm) */
+    int Lenght; /**< Robot Lenght (mm) */
     // <<<<< Dimensions
 
     // >>>>> Wheels, Motors and Reduction
-    uint16_t WheelBase;              /**< Distance between the center of the Wheels (mm) */
-    uint16_t WheelRadiusLeft;        /**< Radius of the left wheel (0.01mm) */
-    uint16_t WheelRadiusRight;       /**< Radius of the right wheel (0.01mm) */
-    uint16_t EncoderCprLeft;         /**< Count per Round of the left encoder */
-    uint16_t EncoderCprRight;        /**< Count per Round of the right encoder */
-    uint16_t MaxRpmMotorLeft;        /**< Max RPM of the left motor */
-    uint16_t MaxRpmMotorRight;       /**< Max RPM of the right motor */
-    uint16_t MaxAmpereMotorLeft;     /**< Max current assorbed by left motor (mA) */
-    uint16_t MaxAmpereMotorRight;    /**< Max current assorbed by right motor (mA) */
-    uint16_t MaxTorqueMotorLeft;     /**< Max torque of the left motor (Ncm) */
-    uint16_t MaxTorqueMotorRight;    /**< Max torque of the right motor (Ncm) */
-    uint16_t RatioShaftLeft;         /**< Reduction Ratio from the shaft of the left motor to the shaft of the left wheel*/
-    uint16_t RatioShaftRight;        /**< Reduction Ratio from the shaft of the right motor to the shaft of the right wheel*/
-    uint16_t RatioMotorLeft;         /**< Reduction Ratio on the left Motor Shaft (Put 1 if you set Max RPM considering it just reduced) */
-    uint16_t RatioMotorRight;        /**< Reduction Ratio on the right Motor Shaft (Put 1 if you set Max RPM considering it just reduced) */
+    int WheelBase;              /**< Distance between the center of the Wheels (mm) */
+    int WheelRadiusLeft;        /**< Radius of the left wheel (0.01mm) */
+    int WheelRadiusRight;       /**< Radius of the right wheel (0.01mm) */
+    int EncoderCprLeft;         /**< Count per Round of the left encoder */
+    int EncoderCprRight;        /**< Count per Round of the right encoder */
+    int MaxRpmMotorLeft;        /**< Max RPM of the left motor */
+    int MaxRpmMotorRight;       /**< Max RPM of the right motor */
+    int MaxAmpereMotorLeft;     /**< Max current assorbed by left motor (mA) */
+    int MaxAmpereMotorRight;    /**< Max current assorbed by right motor (mA) */
+    int MaxTorqueMotorLeft;     /**< Max torque of the left motor (Ncm) */
+    int MaxTorqueMotorRight;    /**< Max torque of the right motor (Ncm) */
+    int RatioShaftLeft;         /**< Reduction Ratio from the shaft of the left motor to the shaft of the left wheel*/
+    int RatioShaftRight;        /**< Reduction Ratio from the shaft of the right motor to the shaft of the right wheel*/
+    int RatioMotorLeft;         /**< Reduction Ratio on the left Motor Shaft (Put 1 if you set Max RPM considering it just reduced) */
+    int RatioMotorRight;        /**< Reduction Ratio on the right Motor Shaft (Put 1 if you set Max RPM considering it just reduced) */
     PinLevel MotorEnableLevel;      /**< Enable Level of the Robot Driver (Low/High)*/
     EncoderPos EncoderPosition;     /**< Encoder on the shaft of the motor or of the wheel */
     // <<<<< Wheels, Motors and Reduction
 
     // >>>>> Battery
-    uint16_t MaxChargedBatteryLevel; /**< Value of the power battery fully charged (Volts * 1000) */
-    uint16_t MinChargedBatteryLevel; /**< Value of the power battery to be considered discharged (Volts * 1000) */
+    int MaxChargedBatteryLevel; /**< Value of the power battery fully charged (Volts * 1000) */
+    int MinChargedBatteryLevel; /**< Value of the power battery to be considered discharged (Volts * 1000) */
     // <<<<< Battery
 } RobotConfiguration;
 

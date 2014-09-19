@@ -1,0 +1,1 @@
+rc_serial: {Serial_Port: /dev/ttyUSB0, Baud_Rate: 57600, Board_Idx: 1, Data_Bit: 8, Parity: N, Stop_Bits: 1}

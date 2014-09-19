@@ -1,0 +1,15 @@
+<launch>
+	<node pkg="robocontroller" type="robocontroller_node" name="robocontroller_node" required="true">
+		
+		<!-- Global Params -->
+		<param name="/global/Telemetry_freq" type="double" value="30.0" />
+		<param name="/global/Command_timeout" type="double" value="0.5" />
+		
+		<!-- RoboController Communication Params -->
+		<rosparam file="$(find robocontroller)/config/rc_serial.yaml" command="load" />
+		<param name="/rc_serial/Simulation_Active" type="bool" value="false" />
+
+		<!-- Robot Params: these parameters are saved on the EEPROM of the RoboController board -->
+		<rosparam file="$(find robocontroller)/config/myzharbot_params.yaml" command="load" />
+	</node>
+</launch>

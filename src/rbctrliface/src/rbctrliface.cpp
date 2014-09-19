@@ -21,7 +21,7 @@ RbCtrlIface::RbCtrlIface(int boardIdx, string serialPort,
     mBoardConnected = false;
 
     mReplyBufSize = INITIAL_REPLY_BUFFER_SIZE;
-    mReplyBuffer = new uint16_t[mReplyBufSize];
+    mReplyBuffer = new u_int16_t[mReplyBufSize];
 
     mBoardIdx = boardIdx;
     int count = 0;
@@ -200,10 +200,10 @@ bool RbCtrlIface::testBoardConnection()
     }
     // <<<<< Simulation?
 
-    uint16_t startAddr = WORD_TEST_BOARD;
-    uint16_t nReg = 1;
+    u_int16_t startAddr = WORD_TEST_BOARD;
+    u_int16_t nReg = 1;
 
-    vector<uint16_t> reply = readMultiReg( startAddr, nReg );
+    vector<u_int16_t> reply = readMultiReg( startAddr, nReg );
 
     if(reply.empty())
     {
@@ -219,12 +219,12 @@ bool RbCtrlIface::testBoardConnection()
     return true;
 }
 
-vector<uint16_t> RbCtrlIface::readMultiReg(uint16_t startAddr, uint16_t nReg)
+vector<u_int16_t> RbCtrlIface::readMultiReg(u_int16_t startAddr, u_int16_t nReg)
 {
     // >>>>> Simulation?
     if(mSimulActive)
     {
-        vector<uint16_t> readRegReply;
+        vector<u_int16_t> readRegReply;
 
         //mBoardMutex.lock();
         {
@@ -233,14 +233,14 @@ vector<uint16_t> RbCtrlIface::readMultiReg(uint16_t startAddr, uint16_t nReg)
             {
                 mReplyBufSize *= 2;
                 delete [] mReplyBuffer;
-                mReplyBuffer = new uint16_t[mReplyBufSize];
+                mReplyBuffer = new u_int16_t[mReplyBufSize];
             }
             // <<<<< Reply buffer resize if needed
 
             readRegReply.resize( nReg+2 );
 
-            readRegReply[0] = (uint16_t)startAddr;
-            readRegReply[1] = (uint16_t)nReg;
+            readRegReply[0] = (u_int16_t)startAddr;
+            readRegReply[1] = (u_int16_t)nReg;
             for( int i=0; i<nReg; i++ )
             {
                 readRegReply[2+i] = (i+1)*1000;
@@ -255,7 +255,7 @@ vector<uint16_t> RbCtrlIface::readMultiReg(uint16_t startAddr, uint16_t nReg)
     }
     // <<<<< Simulation?
     
-    vector<uint16_t> readRegReply;
+    vector<u_int16_t> readRegReply;
 
     if( !mBoardConnected )
     {
@@ -270,7 +270,7 @@ vector<uint16_t> RbCtrlIface::readMultiReg(uint16_t startAddr, uint16_t nReg)
         {
             mReplyBufSize *= 2;
             delete [] mReplyBuffer;
-            mReplyBuffer = new uint16_t[mReplyBufSize];
+            mReplyBuffer = new u_int16_t[mReplyBufSize];
         }
         // <<<<< Reply buffer resize if needed
 
@@ -287,17 +287,17 @@ vector<uint16_t> RbCtrlIface::readMultiReg(uint16_t startAddr, uint16_t nReg)
 
         readRegReply.resize( nReg+2 );
 
-        readRegReply[0] = (uint16_t)startAddr;
-        readRegReply[1] = (uint16_t)nReg;
-        memcpy( (uint16_t*)(readRegReply.data())+2, mReplyBuffer, nReg*sizeof(uint16_t) );
+        readRegReply[0] = (u_int16_t)startAddr;
+        readRegReply[1] = (u_int16_t)nReg;
+        memcpy( (u_int16_t*)(readRegReply.data())+2, mReplyBuffer, nReg*sizeof(u_int16_t) );
     }
     //mBoardMutex.unlock();
 
     return readRegReply;
 }
 
-bool RbCtrlIface::writeMultiReg( uint16_t startAddr, uint16_t nReg,
-                                 vector<uint16_t> vals )
+bool RbCtrlIface::writeMultiReg( u_int16_t startAddr, u_int16_t nReg,
+                                 vector<u_int16_t> vals )
 {
     if(mSimulActive)
     {
