@@ -23,6 +23,6 @@ Usage
 -----
 You are now ready to start *robocontroller_node*:
 * *rosrun robocontroller robocontroller_node*
-* you can control the robot using Qt widget provided by **rqt** package: (i.e. launch *rqt*, add a *Robot Steering" widget, the message should be */cmd_vel*)
-* you can plot the Telemetry and the Pose of the robot adding one or more **plot** widgets and subscribing to the messages */robocontroller/Telemetry* and */robocontroller/Pose*
+* you can control the robot using Qt widget provided by **rqt** package: (i.e. launch *rqt*, add a *Robot Steering" widget, the message should be * /cmd_vel *)
+* you can plot the Telemetry and the Pose of the robot adding one or more **plot** widgets and subscribing to the messages * /robocontroller/Telemetry * and * /robocontroller/Pose *
 
