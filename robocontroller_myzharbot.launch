@@ -4,6 +4,7 @@
 		<!-- Global Params -->
 		<param name="/global/Telemetry_freq" type="double" value="30.0" />
 		<param name="/global/Command_timeout" type="double" value="0.5" />
+		<param name="/general/Speed_filter_enabled" type="bool" value="true" />
 		
 		<!-- RoboController Communication Params -->
 		<rosparam file="$(find robocontroller)/config/rc_serial.yaml" command="load" />

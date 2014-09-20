@@ -19,6 +19,7 @@ ros::Time last_vel_cmd_time; // Time of the last velocity comand received
 // >>>>> Global params
 double telem_freq = 30;
 double vel_cmd_timeout_sec = 0.5; // Timeout for motor stop if non velocity command is received
+bool speed_filter_enabled = true;
 // <<<<< Global params
 
 RbCtrlIface* rbCtrlIface= NULL; // RoboController Interface
@@ -95,6 +96,17 @@ void init_system( ros::NodeHandle& nh )
     }
     else
         nh.setParam(paramStr, vel_cmd_timeout_sec );
+
+    paramStr = ( nameSpace + nodeName + "/general/Speed_filter_enabled");
+    if(nh.hasParam( paramStr ))
+    {
+        nh.getParam(paramStr, speed_filter_enabled);
+        ROS_INFO_STREAM( boardIdx );
+    }
+    else
+        nh.setParam(paramStr, speed_filter_enabled );
+
+
     // <<<<< Global
 
     // >>>>> Serial Port
@@ -329,6 +341,7 @@ int main( int argc, char **argv)
 
     // Set Robot params
     rbCtrl->setRobotConfig( rbConf );
+    rbCtrl->enableSpeedFilter( speed_filter_enabled );
 
     // RoboController publishes telemetry at 30hz
     ros::Rate rate( telem_freq );

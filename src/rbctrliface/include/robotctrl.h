@@ -25,7 +25,7 @@ public:
 
     inline bool isMotorStopped(){return mMotStopped;}
 
-    void enableSpeedFilter(bool enable){mSpeedFilterActive=true;}
+    void enableSpeedFilter(bool enable){ROS_INFO_STREAM( "Speed filter enabled: " << enable);mSpeedFilterActive=true;}
     bool isSpeedFilterEnabled(){return mSpeedFilterActive;}
 
     bool setRobotConfig( RobotConfiguration& config );
