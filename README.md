@@ -19,7 +19,7 @@ Installation
 * Get **RoboController-ROS** code (i.e. *git clone https://github.com/Myzhar/RoboController-ROS.git*)
 * Go back to your workspace root (e.g. *cd ~/catkin_ws*)
 * Compile the new package (i.e. *catkin_make*) [Note: *catkin_make* command must be launched always in the root of your workspace!]
-* Source the new package (i.e. *source devel/setup.bash*) [Note: you can add *source ~/your_ws/devel/setup.bash* (e.g. **source ~/catkin_ws/devel/setup.bash*) at the end of your *~/.bashrc* file to avoid to type the command each time you open a new terminal]
+* Source the new package (i.e. *source devel/setup.bash*) [Note: you can add *source ~/your_ws/devel/setup.bash* (e.g. *source ~/catkin_ws/devel/setup.bash*) at the end of your *~/.bashrc* file to avoid to type the command each time you open a new terminal]
 
 Usage
 -----
