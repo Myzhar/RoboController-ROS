@@ -21,6 +21,15 @@ add_message_files(
     Debug.msg
 )
 
+# SERVICES
+add_service_files(
+   FILES
+   SetPID.srv
+   EnablePID.srv
+   EnableCommWD.srv
+   SetBatteryCalib.srv
+)
+
 generate_messages(
     DEPENDENCIES
     std_msgs

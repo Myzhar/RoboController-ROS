@@ -1,0 +1,4 @@
+bool pidEnabled
+bool rampsEnabled
+---
+bool ok

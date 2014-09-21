@@ -1,0 +1,4 @@
+uint8 paramType # 0: low - 1: high
+uint16 batValue_mV
+---
+bool ok

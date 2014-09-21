@@ -1,0 +1,6 @@
+uint8 motorIdx
+uint16 K_P
+uint16 K_I
+uint16 K_D
+---
+bool ok

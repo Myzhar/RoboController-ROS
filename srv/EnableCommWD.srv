@@ -1,0 +1,4 @@
+bool wdEnabled
+uint16 wdTime_msec
+---
+bool ok
