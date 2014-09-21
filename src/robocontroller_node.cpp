@@ -105,8 +105,6 @@ void init_system( ros::NodeHandle& nh )
     }
     else
         nh.setParam(paramStr, speed_filter_enabled );
-
-
     // <<<<< Global
 
     // >>>>> Serial Port
@@ -414,6 +412,7 @@ int main( int argc, char **argv)
             test_connection(); // Let's send a test message to board to verify that it is connected
         }
         // <<<<< if not received a movement message for N msec then stop motors!
+
         rate.sleep();
     }
 

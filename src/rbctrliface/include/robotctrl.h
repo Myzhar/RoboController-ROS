@@ -13,14 +13,15 @@ public:
     RobotCtrl(ros::NodeHandle* nh,RbCtrlIface* rbCtrl);
 
     bool setRobotSpeed( double fwSpeed, double rotSpeed );
+
     bool setMotorSpeeds(double speedL, double speedR );
+    bool getMotorSpeeds(double &speedL, double &speedR );
+
     bool stopMotors();
 
-    bool getMotorSpeeds(double &speedL, double &speedR );
 
     bool getTelemetry( RobotTelemetry& telemetry);
     void getPose( RobotPose& pose); // Get the latest pose updated by Telemetry
-
     bool getDebugInfo( RcDebug& debug);
 
     inline bool isMotorStopped(){return mMotStopped;}
@@ -30,16 +31,28 @@ public:
 
     bool setRobotConfig( RobotConfiguration& config );
 
+    bool setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_t Kd );
+    bool getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int16_t& Kd );
+
+    bool getBoardStatus( BoardStatus& status);
+
+    bool setBattCalibValue(AnalogCalibValue valueType, double curChargeVal_V );
+
 private:
     void initSpeedFilter();
     void updateMeanVar();
     void applySpeedFilter(RobotTelemetry& telemetry);
+
+    bool updateBoardStatus();
 
 private:
     ros::NodeHandle* mNodeH;
     RbCtrlIface* mRbCtrl;
 
     bool mMotStopped;
+    bool mBoardStatusUpdated;
+
+    BoardStatus mBoardStatus;
 
     RobotTelemetry mTelemetry;
     RobotPose mPose;

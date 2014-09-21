@@ -12,6 +12,7 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
 {
     mNodeH = nh;
     mMotStopped = true;
+    mBoardStatusUpdated = false;
 
     mRbCtrl = rbCtrl;
 
@@ -22,6 +23,7 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
     mSpeedFilterActive = true;
 
     initSpeedFilter();
+    updateBoardStatus();
 }
 
 bool RobotCtrl::getDebugInfo( RcDebug& debug )
@@ -443,6 +445,135 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
         return false;
     }
     // <<<<< Status Register 2
+}
+
+bool RobotCtrl::getBoardStatus( BoardStatus& status)
+{
+    if( !mBoardStatusUpdated )
+    {
+        if( !updateBoardStatus() )
+            return false;
+    }
+
+    memcpy( &status, &mBoardStatus, sizeof(BoardStatus) );
+}
+
+bool RobotCtrl::updateBoardStatus()
+{
+    // >>>>> Status Register 1
+    u_int16_t startAddr = WORD_STATUSBIT1;
+    u_int16_t nReg = 1;
+
+    vector<u_int16_t> reply1 = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply1.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for WORD_STATUSBIT1 is incorrect in size, expected " << nReg+2 << ", received " << reply1.size() );
+        return false;
+    }
+    // <<<<< Status Register
+
+    u_int16_t value = reply1[2];
+
+    mBoardStatus.pidEnable = value & FLG_STATUSBI1_PID_EN;
+    mBoardStatus.wdEnable = value & FLG_STATUSBI1_COMWATCHDOG;
+    mBoardStatus.saveToEeprom = value & FLG_STATUSBI1_EEPROM_SAVE_EN;
+    mBoardStatus.accelRampEnable = value & FLG_STATUSBI1_EEPROM_RAMP_EN;
+
+    mBoardStatusUpdated = true;
+
+    return true;
+}
+
+bool RobotCtrl::setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_t Kd )
+{
+    vector<u_int16_t> data;
+    int nReg = 3;
+    data.resize(nReg);
+
+    u_int16_t startAddr;
+
+    if( mot == motLeft )
+        startAddr = WORD_PID_P_LEFT;
+    else
+        startAddr = WORD_PID_P_RIGHT;
+
+    data[0] = Kp;
+    data[1] = Ki;
+    data[2] = Kd;
+
+    // >>>>> Status Register 1
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error saving second part of configuration to RoboController EEPROM");
+        return false;
+    }
+    // <<<<< Status Register
+}
+
+bool RobotCtrl::getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int16_t& Kd )
+{
+    u_int16_t startAddr;
+
+    if( mot == motLeft )
+        startAddr = WORD_PID_P_LEFT;
+    else
+        startAddr = WORD_PID_P_RIGHT;
+
+    // >>>>> PID registers
+    u_int16_t nReg = 3;
+
+    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for PID registers is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        return false;
+    }
+    // <<<<< PID Registers
+
+    Kp = reply[2];
+    Ki = reply[3];
+    Kd = reply[4];
+}
+
+bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeVal_V )
+{
+    vector<u_int16_t> data;
+    int nReg = 1;
+    data.resize(nReg);
+
+    // >>>>> First phase: setting value
+    u_int16_t charVal = (u_int16_t)(curChargeVal_V*1000.0);
+    u_int16_t startAddr = WORD_VAL_TAR_FS;
+
+    data[0] = charVal;
+
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error setting battery calibration value" );
+        return false;
+    }
+    // <<<<< First phase: setting value
+
+    ros::Duration(0.010).sleep(); // sleep for 10 msec
+
+    // >>>>> Second phase: value imposition
+    u_int16_t flag = (valueType==CalLow)?0x00001:0x0020;
+    startAddr = WORD_FLAG_TARATURA;
+
+    data[0] = flag;
+
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error imposing battery calibration value" );
+        return false;
+    }
+    // <<<<< Second phase: value imposition
+
+    ros::Duration(0.010).sleep(); // sleep for 10 msec
+
+    return true;
 }
 
 }
