@@ -176,23 +176,31 @@ void RobotCtrl::applySpeedFilter(RobotTelemetry &telemetry)
     bool replaceLeft = false;
     bool replaceRight = false;
 
-    if( ((mSpeedMeanLeft != 0) && _SIGN(telemetry.LinSpeedLeft) != _SIGN(mSpeedMeanLeft)) ||
-            fabs(telemetry.LinSpeedLeft)<fabs(mSpeedMeanLeft)/2 )
-    {
-        mMotorSpeedVecLeft[mSpeedLeftVecIdx] = mSpeedMeanLeft;
-        replaceLeft = true;
-    }
-    else
-        mMotorSpeedVecLeft[mSpeedLeftVecIdx] = telemetry.LinSpeedLeft;
+    if( fabs(mSpeedMeanLeft) < 0.1 )
+        mSpeedMeanLeft = telemetry.LinSpeedLeft;
 
-    if( ((mSpeedMeanRight != 0) &&_SIGN(telemetry.LinSpeedRight)!=_SIGN(mSpeedMeanRight)) ||
-            fabs(telemetry.LinSpeedRight)<fabs(mSpeedMeanRight)/2 )
-    {
-        mMotorSpeedVecRight[mSpeedRightVecIdx] = mSpeedMeanRight;
-        replaceRight = true;
-    }
+    if( fabs(mSpeedMeanRight) < 0.1 )
+        mSpeedMeanLeft = telemetry.LinSpeedRight;
     else
-        mMotorSpeedVecRight[mSpeedRightVecIdx] = telemetry.LinSpeedRight;
+    {
+        if( /*((mSpeedMeanLeft != 0) && _SIGN(telemetry.LinSpeedLeft) != _SIGN(mSpeedMeanLeft)) ||*/
+                fabs(telemetry.LinSpeedLeft)<fabs(mSpeedMeanLeft)/2 )
+        {
+            mMotorSpeedVecLeft[mSpeedLeftVecIdx] = mSpeedMeanLeft;
+            replaceLeft = true;
+        }
+        else
+            mMotorSpeedVecLeft[mSpeedLeftVecIdx] = telemetry.LinSpeedLeft;
+
+        if( /*((mSpeedMeanRight != 0) &&_SIGN(telemetry.LinSpeedRight)!=_SIGN(mSpeedMeanRight)) ||*/
+                fabs(telemetry.LinSpeedRight)<fabs(mSpeedMeanRight)/2 )
+        {
+            mMotorSpeedVecRight[mSpeedRightVecIdx] = mSpeedMeanRight;
+            replaceRight = true;
+        }
+        else
+            mMotorSpeedVecRight[mSpeedRightVecIdx] = telemetry.LinSpeedRight;
+    }
 
     mSpeedLeftVecIdx++;
     mSpeedLeftVecIdx %= SPEED_FILTER_SIZE;
@@ -219,24 +227,26 @@ void RobotCtrl::applySpeedFilter(RobotTelemetry &telemetry)
 
 void RobotCtrl::updateMeanVar()
 {
-    /*
-    def online_variance(data):
-    n = 0
-    mean = 0
-    M2 = 0
+    /* Algorithm:
+     * ==========
+     * def online_variance(data):
+     * n = 0
+     * mean = 0
+     * M2 = 0
+     *
+     * for x in data:
+     *     n = n + 1
+     *     delta = x - mean
+     *     mean = mean + delta/n
+     *     M2 = M2 + delta*(x - mean)
+     *
+     * if (n < 2):
+     *     return 0
+     *
+     * variance = M2/(n - 1)
+     * return variance
+     */
 
-    for x in data:
-        n = n + 1
-        delta = x - mean
-        mean = mean + delta/n
-        M2 = M2 + delta*(x - mean)
-
-    if (n < 2):
-        return 0
-
-    variance = M2/(n - 1)
-    return variance
-    */
     int n;
     double M2;
 
