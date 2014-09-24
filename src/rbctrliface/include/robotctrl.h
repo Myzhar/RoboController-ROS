@@ -19,7 +19,6 @@ public:
 
     bool stopMotors();
 
-
     bool getTelemetry( RobotTelemetry& telemetry);
     void getPose( RobotPose& pose); // Get the latest pose updated by Telemetry
     bool getDebugInfo( RcDebug& debug);
@@ -35,6 +34,8 @@ public:
     bool getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int16_t& Kd );
 
     bool getBoardStatus( BoardStatus& status);
+
+    // TODO Add function to set Status Parameters (PID, Ramps, WD, SavetoEEPROM)
 
     bool setBattCalibValue(AnalogCalibValue valueType, double curChargeVal_V );
 

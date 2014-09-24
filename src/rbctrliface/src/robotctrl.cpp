@@ -515,7 +515,7 @@ bool RobotCtrl::setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_
     // >>>>> Status Register 1
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
-        ROS_ERROR_STREAM( "Error saving second part of configuration to RoboController EEPROM");
+        ROS_ERROR_STREAM( "Error saving PID parameters to RoboController EEPROM");
         return false;
     }
     // <<<<< Status Register

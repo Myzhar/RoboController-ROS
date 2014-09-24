@@ -5,6 +5,11 @@
 #include <robocontroller/Telemetry.h>
 #include <robocontroller/Pose.h>
 #include <robocontroller/Debug.h>
+#include <robocontroller/EnablePID.h>
+#include <robocontroller/SetPID.h>
+#include <robocontroller/GetPID.h>
+#include <robocontroller/EnableCommWD.h>
+#include <robocontroller/SetBatteryCalib.h>
 #include <stdlib.h>
 
 #include "rbctrliface.h"
@@ -39,11 +44,22 @@ bool simulMode = true;
 RobotConfiguration rbConf;
 // <<<<< Robot Params
 
-
 // >>>>> Functions
-void vel_cmd_callback( const geometry_msgs::Twist& msg );
 void test_connection();
+void init_system( ros::NodeHandle& nh );
 // <<<<< Functions
+
+// >>>>> Callbacks
+// Messages
+void vel_cmd_callback( const geometry_msgs::Twist& msg );
+
+// Services
+bool setPid_callback( robocontroller::SetPIDRequest &req, robocontroller::SetPIDResponse &resp );
+bool getPid_callback( robocontroller::GetPIDRequest &req, robocontroller::GetPIDResponse &resp );
+bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocontroller::SetBatteryCalibResponse& resp );
+bool enablePID_callback( robocontroller::EnablePIDRequest& req, robocontroller::EnablePIDResponse& resp );
+bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req, robocontroller::EnableCommWDResponse& resp );
+// <<<<< Callbacks
 
 void vel_cmd_callback( const geometry_msgs::Twist& msg )
 {
@@ -58,6 +74,46 @@ void vel_cmd_callback( const geometry_msgs::Twist& msg )
     {
         ROS_ERROR_STREAM( "Robot Speed not set!" );
     }
+}
+
+bool setPid_callback( robocontroller::SetPIDRequest& req, robocontroller::SetPIDResponse& resp )
+{
+    MotorPos mot;
+    mot = req.motorIdx==0?motLeft:motRight;
+
+    resp.ok = rbCtrl->setPidValues( mot, req.K_P, req.K_I, req.K_D );
+
+    return resp.ok;
+}
+
+bool getPid_callback( robocontroller::GetPIDRequest &req, robocontroller::GetPIDResponse &resp )
+{
+    MotorPos mot;
+    mot = req.motorIdx==0?motLeft:motRight;
+
+    bool ok = rbCtrl->getPidValues( mot, resp.K_P, resp.K_I, resp.K_D );
+
+    return ok;
+}
+
+bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocontroller::SetBatteryCalibResponse& resp )
+{
+    AnalogCalibValue par_type;
+    par_type = req.paramType==0?CalLow:CalHigh;
+
+    resp.ok = rbCtrl->setBattCalibValue( par_type, ((double)req.batValue_mV)/1000.0 );
+
+    return resp.ok;
+}
+
+bool enablePID_callback( robocontroller::EnablePIDRequest& req, robocontroller::EnablePIDResponse& resp )
+{
+    return true;
+}
+
+bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req, robocontroller::EnableCommWDResponse& resp )
+{
+    return true;
 }
 
 void test_connection()

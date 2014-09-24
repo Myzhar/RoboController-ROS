@@ -26,6 +26,7 @@ add_message_files(
 add_service_files(
    FILES
    SetPID.srv
+   GetPID.srv
    EnablePID.srv
    EnableCommWD.srv
    SetBatteryCalib.srv
