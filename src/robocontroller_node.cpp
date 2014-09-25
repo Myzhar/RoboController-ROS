@@ -1,16 +1,17 @@
 // This node handle the communication with RoboController board
 
+#include <stdlib.h>
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
-#include <robocontroller/Telemetry.h>
 #include <robocontroller/Pose.h>
 #include <robocontroller/Debug.h>
-#include <robocontroller/EnablePID.h>
+#include <robocontroller/Telemetry.h>
 #include <robocontroller/SetPID.h>
 #include <robocontroller/GetPID.h>
+#include <robocontroller/EnablePID.h>
 #include <robocontroller/EnableCommWD.h>
 #include <robocontroller/SetBatteryCalib.h>
-#include <stdlib.h>
+#include <robocontroller/EnableSaveToEeprom.h>
 
 #include "rbctrliface.h"
 #include "robotctrl.h"
@@ -59,6 +60,7 @@ bool getPid_callback( robocontroller::GetPIDRequest &req, robocontroller::GetPID
 bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocontroller::SetBatteryCalibResponse& resp );
 bool enablePID_callback( robocontroller::EnablePIDRequest& req, robocontroller::EnablePIDResponse& resp );
 bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req, robocontroller::EnableCommWDResponse& resp );
+bool EnableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req, robocontroller::EnableSaveToEepromResponse& resp );
 // <<<<< Callbacks
 
 void vel_cmd_callback( const geometry_msgs::Twist& msg )
@@ -107,13 +109,24 @@ bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocon
 }
 
 bool enablePID_callback( robocontroller::EnablePIDRequest& req, robocontroller::EnablePIDResponse& resp )
-{
-    return true;
+{    
+    resp.ok = rbCtrl->enablePID( req.pidEnabled, req.rampsEnabled );
+
+    return resp.ok;
 }
 
 bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req, robocontroller::EnableCommWDResponse& resp )
 {
-    return true;
+    resp.ok = rbCtrl->enableWD( req.wdEnabled, req.wdTime_msec );
+
+    return resp.ok;
+}
+
+bool EnableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req, robocontroller::EnableSaveToEepromResponse& resp )
+{
+    resp.ok = rbCtrl->enableSaveToEeprom( req.enableSaveToEeprom );
+
+    return resp.ok;
 }
 
 void test_connection()

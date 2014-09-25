@@ -16,10 +16,10 @@ find_package(catkin REQUIRED COMPONENTS
 #########################################################
 # MESSAGES
 add_message_files(
-    FILES
-    Telemetry.msg
+    FILES    
     Pose.msg
     Debug.msg
+    Telemetry.msg
 )
 
 # SERVICES
@@ -30,6 +30,7 @@ add_service_files(
    EnablePID.srv
    EnableCommWD.srv
    SetBatteryCalib.srv
+   EnableSaveToEeprom.srv
 )
 
 generate_messages(

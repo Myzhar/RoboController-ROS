@@ -1,0 +1,3 @@
+bool enableSaveToEeprom
+---
+bool ok

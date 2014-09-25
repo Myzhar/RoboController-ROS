@@ -321,7 +321,11 @@ bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )
 
 bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
 {
-    // TODO Verify that RoboController is in PID mode (make a service for the status)
+    if( mMotorCtrlMode != mcPID )
+    {
+        ROS_ERROR_STREAM( "It is not possible to set the speeds of the motors. PID in not enabled");
+        return false;
+    }
 
     if( mMotStopped )
         mLastTelemTime = ros::Time::now();
@@ -468,9 +472,148 @@ bool RobotCtrl::getBoardStatus( BoardStatus& status)
     memcpy( &status, &mBoardStatus, sizeof(BoardStatus) );
 }
 
+bool RobotCtrl::setBoardStatus( BoardStatus &status )
+{
+    u_int16_t statusVal = 0x0000;
+    if(status.accelRampEnable)
+        statusVal |= FLG_STATUSBI1_EEPROM_RAMP_EN;
+    if(status.pidEnable)
+    {
+        mMotorCtrlMode = mcPID;
+        statusVal |= FLG_STATUSBI1_PID_EN;
+    }
+    else
+        mMotorCtrlMode = mcDirectPWM;
+    if(status.saveToEeprom)
+        statusVal |= FLG_STATUSBI1_EEPROM_SAVE_EN;
+    if(status.wdEnable)
+        statusVal |= FLG_STATUSBI1_COMWATCHDOG;
+
+    vector<u_int16_t> data;
+    int nReg = 1;
+    data.resize(nReg);
+    data[0] = statusVal;
+    u_int16_t startAddr = WORD_STATUSBIT1;
+
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error saving board status to RoboController EEPROM");
+
+        return false;
+    }
+
+    mBoardStatusUpdated = true;
+
+    if( mBoardStatus.pidEnable )
+        mMotorCtrlMode = mcPID;
+    else
+        mMotorCtrlMode = mcDirectPWM;
+
+    return true;
+}
+
+bool RobotCtrl::enablePID( bool pidEnable, bool rampsEnable  )
+{
+    if( !mBoardStatusUpdated )
+    {
+        if( !updateBoardStatus() )
+            return false;
+    }
+
+    mBoardStatus.pidEnable = pidEnable;
+    mBoardStatus.accelRampEnable = rampsEnable;
+
+    if( !setBoardStatus( mBoardStatus ) )
+    {
+        ROS_ERROR_STREAM( "Error setting PID status");
+        mBoardStatusUpdated = false;
+        return false;
+    }
+
+    mBoardStatusUpdated = true;
+    return true;
+}
+
+bool RobotCtrl::enableWD( bool enable, u_int16_t wdTime_msec )
+{
+    if( !mBoardStatusUpdated )
+    {
+        if( !updateBoardStatus() )
+            return false;
+    }
+
+    mBoardStatus.saveToEeprom = enable;
+
+    if( !setBoardStatus( mBoardStatus ) )
+    {
+        ROS_ERROR_STREAM( "Error setting WatchDog status");
+        mBoardStatusUpdated = false;
+        return false;
+    }
+
+    return setWdTimeoutTime( wdTime_msec);
+}
+
+bool RobotCtrl::setWdTimeoutTime( u_int16_t wdTimeout_msec )
+{
+    vector<u_int16_t> data;
+    int nReg = 1;
+    data.resize(nReg);
+    data[0] = wdTimeout_msec;
+    u_int16_t startAddr = WORD_COMWATCHDOG_TIME;
+
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error setting watchdog communication timeout to RoboController");
+
+        return false;
+    }
+
+    return true;
+}
+
+u_int16_t RobotCtrl::getWdTimeoutTime()
+{
+    // >>>>> Status Register
+    u_int16_t startAddr = WORD_COMWATCHDOG_TIME;
+    u_int16_t nReg = 1;
+
+    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for WORD_COMWATCHDOG_TIME is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        return false;
+    }
+    // <<<<< Status Register
+
+    return reply[0];
+}
+
+bool RobotCtrl::enableSaveToEeprom( bool enable )
+{
+    if( !mBoardStatusUpdated )
+    {
+        if( !updateBoardStatus() )
+            return false;
+    }
+
+    mBoardStatus.saveToEeprom = enable;
+
+    if( !setBoardStatus( mBoardStatus ) )
+    {
+        ROS_ERROR_STREAM( "Error setting SaveToEeprom status");
+        mBoardStatusUpdated = false;
+        return false;
+    }
+
+    mBoardStatusUpdated = true;
+    return true;
+}
+
 bool RobotCtrl::updateBoardStatus()
 {
-    // >>>>> Status Register 1
+    // >>>>> Status Register
     u_int16_t startAddr = WORD_STATUSBIT1;
     u_int16_t nReg = 1;
 
@@ -491,6 +634,11 @@ bool RobotCtrl::updateBoardStatus()
     mBoardStatus.accelRampEnable = value & FLG_STATUSBI1_EEPROM_RAMP_EN;
 
     mBoardStatusUpdated = true;
+
+    if( mBoardStatus.pidEnable )
+        mMotorCtrlMode = mcPID;
+    else
+        mMotorCtrlMode = mcDirectPWM;
 
     return true;
 }

@@ -34,8 +34,14 @@ public:
     bool getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int16_t& Kd );
 
     bool getBoardStatus( BoardStatus& status);
+    bool setBoardStatus( BoardStatus& status);
 
-    // TODO Add function to set Status Parameters (PID, Ramps, WD, SavetoEEPROM)
+    bool enablePID( bool pidEnable, bool rampsEnable  );
+    bool enableWD( bool enable, u_int16_t wdTime_msec );
+    bool enableSaveToEeprom( bool enable );
+
+    bool setWdTimeoutTime( u_int16_t wdTimeout_msec );
+    u_int16_t getWdTimeoutTime();
 
     bool setBattCalibValue(AnalogCalibValue valueType, double curChargeVal_V );
 
@@ -59,6 +65,8 @@ private:
     RobotPose mPose;
 
     RobotConfiguration mRobotConfig;
+
+    MotorCtrlMode mMotorCtrlMode; /**< Current motor control mode */
 
     ros::Time mLastTelemTime;
 
