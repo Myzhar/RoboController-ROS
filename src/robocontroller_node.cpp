@@ -428,6 +428,9 @@ int main( int argc, char **argv)
                 debug_msg.enc1_period = debugInfo.enc1_period;
                 debug_msg.enc2_period = debugInfo.enc2_period;
 
+                for( int i=0; i<debug_msg.debug.size(); i++ )
+                    debug_msg.debug[i]=debugInfo.debug_reg[i];
+
                 debug_pub.publish( debug_msg );
 
                 ROS_INFO_STREAM( "Published Debug information");

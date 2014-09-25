@@ -41,6 +41,23 @@ bool RobotCtrl::getDebugInfo( RcDebug& debug )
 
     debug.enc1_period = reply[2];
     debug.enc2_period = reply[3];
+
+    // >>>>> Debug registers
+    startAddr = WORD_DEBUG_00;
+    nReg = 20;
+
+    vector<u_int16_t> reply2 = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply2.size() != nReg+2 )
+    {
+        ROS_WARN_STREAM( "RC reply for debug registers is incorrect in size, expected " << nReg+2 << ", received " << reply2.size() );
+        return false;
+    }
+    // <<<<< Debug registers
+
+    memcpy( debug.debug_reg, &(reply2.data()[2]), nReg );
+
+    return true;
 }
 
 bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)

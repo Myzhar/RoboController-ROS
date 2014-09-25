@@ -158,6 +158,8 @@ typedef struct _RcDebug
 {
     u_int16_t enc1_period;      /**< WORD_ENC1_PERIOD */
     u_int16_t enc2_period;      /**< WORD_ENC2_PERIOD */
+
+    u_int16_t debug_reg[20];    /**< Debug registers from WORD_DEBUG_00 to WORD_DEBUG_19 */
 } RcDebug;
 
 }
