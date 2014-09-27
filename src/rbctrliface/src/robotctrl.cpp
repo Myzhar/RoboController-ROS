@@ -465,7 +465,7 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
 
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
-        ROS_ERROR_STREAM( "Error saving first part of configuration to RoboController EEPROM");
+        ROS_ERROR_STREAM( "Error sendng first part of configuration to RoboController");
         return false;
     }
     // <<<<< Robot Configuration Data (19 consequtive registers)
@@ -485,10 +485,12 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
 
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
-        ROS_ERROR_STREAM( "Error saving second part of configuration to RoboController EEPROM");
+        ROS_ERROR_STREAM( "Error sending second part of configuration to RoboController");
         return false;
     }
     // <<<<< Status Register 2
+
+    ROS_INFO_STREAM( "Robot parameters sent to RoboController");
 }
 
 bool RobotCtrl::getBoardStatus( BoardStatus& status)
@@ -527,7 +529,7 @@ bool RobotCtrl::setBoardStatus( BoardStatus &status )
 
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
-        ROS_ERROR_STREAM( "Error saving board status to RoboController EEPROM");
+        ROS_ERROR_STREAM( "Error sending board status to RoboController");
 
         return false;
     }
@@ -538,6 +540,8 @@ bool RobotCtrl::setBoardStatus( BoardStatus &status )
         mMotorCtrlMode = mcPID;
     else
         mMotorCtrlMode = mcDirectPWM;
+
+    ROS_INFO_STREAM( "Board parameters sent to RoboController");
 
     return true;
 }
@@ -598,6 +602,8 @@ bool RobotCtrl::setWdTimeoutTime( u_int16_t wdTimeout_msec )
 
         return false;
     }
+
+    ROS_INFO_STREAM( "WatchDog parameters sent to RoboController");
 
     return true;
 }
@@ -693,10 +699,12 @@ bool RobotCtrl::setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_
     // >>>>> Status Register 1
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
-        ROS_ERROR_STREAM( "Error saving PID parameters to RoboController EEPROM");
+        ROS_ERROR_STREAM( "Error sending PID parameters to RoboController");
         return false;
     }
     // <<<<< Status Register
+
+    ROS_INFO_STREAM( "PID parameters sent to RoboController");
 }
 
 bool RobotCtrl::getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int16_t& Kd )
@@ -723,6 +731,8 @@ bool RobotCtrl::getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int1
     Kp = reply[2];
     Ki = reply[3];
     Kd = reply[4];
+
+    return true;
 }
 
 bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeVal_V )
@@ -760,6 +770,8 @@ bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeV
     // <<<<< Second phase: value imposition
 
     ros::Duration(0.010).sleep(); // sleep for 10 msec
+
+    ROS_INFO_STREAM( "Battery calibration parameters sent to RoboController");
 
     return true;
 }
