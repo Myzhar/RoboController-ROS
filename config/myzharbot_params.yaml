@@ -1,7 +1,7 @@
 robot_param: {
    EncoderCprLeft: 400,
    EncoderCprRight: 400,
-   EncoderPosition: 1,
+   EncoderPosition: 0,
    Height_mm: 200,
    Lenght_mm: 365, 
    MaxAmpereMotorLeft_mA: 1650, 

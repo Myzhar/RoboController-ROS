@@ -25,7 +25,7 @@ ros::Time last_vel_cmd_time; // Time of the last velocity comand received
 // >>>>> Global params
 double telem_freq = 30;
 double vel_cmd_timeout_sec = 0.5; // Timeout for motor stop if non velocity command is received
-bool speed_filter_enabled = true;
+bool speed_filter_enabled = false;
 // <<<<< Global params
 
 RbCtrlIface* rbCtrlIface= NULL; // RoboController Interface
@@ -38,7 +38,7 @@ int serialbaudrate = 57600;
 string parity = "N";
 int data_bit = 8;
 int stop_bit = 1;
-bool simulMode = true;
+bool simulMode = false;
 // <<<<< Serial port parameters
 
 // >>>>> Robot Params
@@ -354,7 +354,7 @@ void init_system( ros::NodeHandle& nh )
         rbConf.EncoderPosition = static_cast<EncoderPos>(val);
     }
     else
-        nh.setParam(paramStr, 1 );
+        nh.setParam(paramStr, 0 );
 
     paramStr = ( nameSpace + nodeName + "/robot_param/MaxChargedBatteryLevel_mV");
     if(nh.hasParam( paramStr ))
@@ -392,6 +392,20 @@ int main( int argc, char **argv)
     // Publisher for Debug message
     ros::Publisher debug_pub = nh.advertise<robocontroller::Debug>( "/robocontroller/Debug", 100 );
     robocontroller::Debug debug_msg;
+
+    // Server PID
+    ros::ServiceServer setPidServer = nh.advertiseService( "/robocontroller/SetPid", setPid_callback );
+    ros::ServiceServer getPidServer = nh.advertiseService( "/robocontroller/GetPid", getPid_callback );
+    ros::ServiceServer enablePidServer = nh.advertiseService( "/robocontroller/EnablePid", enablePID_callback );
+
+    // Server Battery Calibration
+    ros::ServiceServer battCalibServer = nh.advertiseService( "/robocontroller/SetBattCalib", setBattCalib_callback );
+
+    // Server WatchDog
+    ros::ServiceServer enableWdServer = nh.advertiseService( "/robocontroller/EnableCommWD", enableCommWD_callback );
+
+    // Server enable EEPROM saving
+    ros::ServiceServer enableEepromServer = nh.advertiseService( "/robocontroller/EnableSaveToEeprom", EnableSaveToEeprom_callback );
 
     // >>>>> Interface to RoboController board
     rbCtrlIface = new RbCtrlIface( boardIdx, serialPort, serialbaudrate, parity.c_str()[0], data_bit, stop_bit, simulMode );
