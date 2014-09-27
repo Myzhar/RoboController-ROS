@@ -324,8 +324,8 @@ void RobotCtrl::updateMeanVar()
 
 bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )
 {
-    double speedL = fwSpeed + 0.5 * rotSpeed * mRobotConfig.WheelBase/1000.0;
-    double speedR = fwSpeed - 0.5 * rotSpeed * mRobotConfig.WheelBase/1000.0;
+    double speedL = fwSpeed + 0.5 * rotSpeed * ((double)mRobotConfig.WheelBase)/1000.0;
+    double speedR = fwSpeed - 0.5 * rotSpeed * ((double)mRobotConfig.WheelBase)/1000.0;
 
     ROS_DEBUG_STREAM( "fwSpeed: " << fwSpeed << " ; rotSpeed: " << rotSpeed << " m/sec" );
     ROS_DEBUG_STREAM( "speedL: " << speedL << " ; speedR: " << speedR << " m/sec" );
