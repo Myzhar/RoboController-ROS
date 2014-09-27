@@ -1,7 +1,7 @@
 #include "robotctrl.h"
 #include "modbus_registers.h"
 
-#define RAD2RPM 9.5492965855
+#define RAD2RPM 9.549296585514
 
 namespace robocontroller
 {

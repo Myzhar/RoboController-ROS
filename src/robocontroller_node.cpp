@@ -447,6 +447,7 @@ int main( int argc, char **argv)
             telemetry_msg.mot_pwm_left = roboTelemetry.PwmLeft;
             telemetry_msg.mot_pwm_right = roboTelemetry.PwmRight;
             telemetry_msg.mot_rpm_left = roboTelemetry.RpmLeft;
+            telemetry_msg.mot_rpm_right = roboTelemetry.RpmRight;
             telemetry_msg.mot_speed_left = roboTelemetry.LinSpeedLeft;
             telemetry_msg.mot_speed_right = roboTelemetry.LinSpeedRight;
             telemetry_msg.battery = roboTelemetry.Battery;
