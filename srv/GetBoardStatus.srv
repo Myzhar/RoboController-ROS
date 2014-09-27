@@ -1,0 +1,5 @@
+---
+bool pid_enable
+bool ramps_enable
+bool watchdog_enable
+bool saveToEeprom_enable
