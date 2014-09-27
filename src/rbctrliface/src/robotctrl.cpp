@@ -106,8 +106,8 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     telemetry.PwmRight = reply[5];
 
     // rpm = (v_lin/r)*RAD2RPM
-    mTelemetry.RpmLeft  = RAD2RPM*(telemetry.LinSpeedLeft/(mRobotConfig.WheelRadiusLeft)*100000.0); // Remember that wheel radius is in 0.01mm
-    mTelemetry.RpmRight = RAD2RPM*(telemetry.LinSpeedRight/(mRobotConfig.WheelRadiusRight)*100000.0); // Remember that wheel radius is in 0.01mm
+    telemetry.RpmLeft  = RAD2RPM*(telemetry.LinSpeedLeft/(((double)(mRobotConfig.WheelRadiusLeft))/100000.0)); // Remember that wheel radius is in 0.01mm
+    telemetry.RpmRight = RAD2RPM*(telemetry.LinSpeedRight/(((double)(mRobotConfig.WheelRadiusRight))/100000.0)); // Remember that wheel radius is in 0.01mm
 
     startAddr = WORD_TENSIONE_ALIM;
     nReg = 1;

@@ -354,7 +354,7 @@ void init_system( ros::NodeHandle& nh )
         rbConf.EncoderPosition = static_cast<EncoderPos>(val);
     }
     else
-        nh.setParam(paramStr, 1 );
+        nh.setParam(paramStr, 0 );
 
     paramStr = ( nameSpace + nodeName + "/robot_param/MaxChargedBatteryLevel_mV");
     if(nh.hasParam( paramStr ))
