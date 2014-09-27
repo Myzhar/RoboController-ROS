@@ -1,6 +1,8 @@
 #include "robotctrl.h"
 #include "modbus_registers.h"
 
+#define RAD2RPM 9.5492965855
+
 namespace robocontroller
 {
 
@@ -29,7 +31,8 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
 bool RobotCtrl::getDebugInfo( RcDebug& debug )
 {
     u_int16_t startAddr = WORD_ENC1_PERIOD;
-    u_int16_t nReg = 2;
+    //u_int16_t nReg = 2;
+    u_int16_t nReg = 3; // TODO remember to change this to 2 when the firmware changes!
 
     vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
@@ -40,7 +43,8 @@ bool RobotCtrl::getDebugInfo( RcDebug& debug )
     }
 
     debug.enc1_period = reply[2];
-    debug.enc2_period = reply[3];
+    //debug.enc2_period = reply[3];
+    debug.enc2_period = reply[4]; // TODO remember to change this to 3 when the firmware changes!
 
     // >>>>> Debug registers
     startAddr = WORD_DEBUG_00;
@@ -62,6 +66,10 @@ bool RobotCtrl::getDebugInfo( RcDebug& debug )
 
 bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
 {
+    // TODO Everything in getTelemetry function must be changed
+    //      when RoboController will emit RPM instead of
+    //      linear speeds
+
     // >>>>> Telemetry update
     // WORD_TENSIONE_ALIM 8
     // WORD_ENC1_SPEED 20
@@ -97,8 +105,9 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     telemetry.PwmLeft = reply[4];
     telemetry.PwmRight = reply[5];
 
-    // TODO mTelemetry.RpmLeft = // CALCULATE!!!
-    // TODO mTelemetry.RpmRight = // CALCULATE!!!
+    // rpm = (v_lin/r)*RAD2RPM
+    mTelemetry.RpmLeft  = RAD2RPM*(telemetry.LinSpeedLeft/(mRobotConfig.WheelRadiusLeft)*100000.0); // Remember that wheel radius is in 0.01mm
+    mTelemetry.RpmRight = RAD2RPM*(telemetry.LinSpeedRight/(mRobotConfig.WheelRadiusRight)*100000.0); // Remember that wheel radius is in 0.01mm
 
     startAddr = WORD_TENSIONE_ALIM;
     nReg = 1;
@@ -128,9 +137,13 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     double dt = (now - mLastTelemTime).toSec();
     mLastTelemTime = now;
 
+    // >>>>> Odometry update
+    // TODO this elaboration must be replaced by QEI data from
+    //      RoboController, when QEI will be updated!
     mPose.theta += omega * dt;
     mPose.x += v * cos( mPose.theta ) * dt;
     mPose.y += v * sin( mPose.theta ) * dt;
+    // <<<<< Odometry update
 
     return true;
 }
