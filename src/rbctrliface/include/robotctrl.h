@@ -29,6 +29,7 @@ public:
     bool isSpeedFilterEnabled(){return mSpeedFilterActive;}
 
     bool setRobotConfig( RobotConfiguration& config );
+    bool getRobotConfig( RobotConfiguration& config );
 
     bool setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_t Kd );
     bool getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int16_t& Kd );

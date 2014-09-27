@@ -80,7 +80,8 @@ void vel_cmd_callback( const geometry_msgs::Twist& msg )
     }
 }
 
-bool setPid_callback( robocontroller::SetPIDRequest& req, robocontroller::SetPIDResponse& resp )
+bool setPid_callback( robocontroller::SetPIDRequest& req,
+                      robocontroller::SetPIDResponse& resp )
 {
     MotorPos mot;
     mot = req.motorIdx==0?motLeft:motRight;
@@ -90,7 +91,8 @@ bool setPid_callback( robocontroller::SetPIDRequest& req, robocontroller::SetPID
     return resp.ok;
 }
 
-bool getPid_callback( robocontroller::GetPIDRequest &req, robocontroller::GetPIDResponse &resp )
+bool getPid_callback( robocontroller::GetPIDRequest &req,
+                      robocontroller::GetPIDResponse &resp )
 {
     MotorPos mot;
     mot = req.motorIdx==0?motLeft:motRight;
@@ -100,7 +102,8 @@ bool getPid_callback( robocontroller::GetPIDRequest &req, robocontroller::GetPID
     return ok;
 }
 
-bool getBoardStatus_callback( robocontroller::GetBoardStatusRequest& req, robocontroller::GetBoardStatusResponse& resp )
+bool getBoardStatus_callback( robocontroller::GetBoardStatusRequest& req,
+                              robocontroller::GetBoardStatusResponse& resp )
 {
     BoardStatus status;
 
@@ -113,10 +116,10 @@ bool getBoardStatus_callback( robocontroller::GetBoardStatusRequest& req, roboco
     resp.saveToEeprom_enable = status.saveToEeprom;
 
     return true;
-
 }
 
-bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocontroller::SetBatteryCalibResponse& resp )
+bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req,
+                            robocontroller::SetBatteryCalibResponse& resp )
 {
     AnalogCalibValue par_type;
     par_type = req.paramType==0?CalLow:CalHigh;
@@ -126,21 +129,24 @@ bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocon
     return resp.ok;
 }
 
-bool enablePID_callback( robocontroller::EnablePIDRequest& req, robocontroller::EnablePIDResponse& resp )
+bool enablePID_callback( robocontroller::EnablePIDRequest& req,
+                         robocontroller::EnablePIDResponse& resp )
 {    
     resp.ok = rbCtrl->enablePID( req.pidEnabled, req.rampsEnabled );
 
     return resp.ok;
 }
 
-bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req, robocontroller::EnableCommWDResponse& resp )
+bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req,
+                            robocontroller::EnableCommWDResponse& resp )
 {
     resp.ok = rbCtrl->enableWD( req.wdEnabled, req.wdTime_msec );
 
     return resp.ok;
 }
 
-bool enableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req, robocontroller::EnableSaveToEepromResponse& resp )
+bool enableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req,
+                                  robocontroller::EnableSaveToEepromResponse& resp )
 {
     resp.ok = rbCtrl->enableSaveToEeprom( req.enableSaveToEeprom );
 
@@ -444,6 +450,11 @@ int main( int argc, char **argv)
     // Set Robot params
     rbCtrl->setRobotConfig( rbConf );
     rbCtrl->enableSpeedFilter( speed_filter_enabled );
+
+    // >>>>> Config test
+    RobotConfiguration testConf;
+    rbCtrl->getRobotConfig( testConf );
+    // <<<<< Config test
 
     // RoboController publishes telemetry at 30hz
     ros::Rate rate( telem_freq );
