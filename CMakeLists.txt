@@ -29,6 +29,7 @@ add_service_files(
    GetPID.srv
    EnablePID.srv
    EnableCommWD.srv
+   GetBoardStatus.srv
    SetBatteryCalib.srv
    EnableSaveToEeprom.srv
 )

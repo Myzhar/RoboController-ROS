@@ -491,17 +491,21 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
     // <<<<< Status Register 2
 
     ROS_INFO_STREAM( "Robot parameters sent to RoboController");
+
+    return true;
 }
 
 bool RobotCtrl::getBoardStatus( BoardStatus& status)
 {
-    if( !mBoardStatusUpdated )
+    //if( !mBoardStatusUpdated )
     {
         if( !updateBoardStatus() )
             return false;
     }
 
     memcpy( &status, &mBoardStatus, sizeof(BoardStatus) );
+
+    return true;
 }
 
 bool RobotCtrl::setBoardStatus( BoardStatus &status )
@@ -565,6 +569,8 @@ bool RobotCtrl::enablePID( bool pidEnable, bool rampsEnable  )
     }
 
     mBoardStatusUpdated = true;
+
+    ROS_INFO_STREAM( "PID and Ramps status sent to RoboController");
     return true;
 }
 
@@ -584,6 +590,8 @@ bool RobotCtrl::enableWD( bool enable, u_int16_t wdTime_msec )
         mBoardStatusUpdated = false;
         return false;
     }
+
+    ROS_INFO_STREAM( "Watchdog status sent to RoboController");
 
     return setWdTimeoutTime( wdTime_msec);
 }

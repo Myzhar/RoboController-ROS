@@ -10,6 +10,7 @@
 #include <robocontroller/GetPID.h>
 #include <robocontroller/EnablePID.h>
 #include <robocontroller/EnableCommWD.h>
+#include <robocontroller/GetBoardStatus.h>
 #include <robocontroller/SetBatteryCalib.h>
 #include <robocontroller/EnableSaveToEeprom.h>
 
@@ -57,10 +58,11 @@ void vel_cmd_callback( const geometry_msgs::Twist& msg );
 // Services
 bool setPid_callback( robocontroller::SetPIDRequest &req, robocontroller::SetPIDResponse &resp );
 bool getPid_callback( robocontroller::GetPIDRequest &req, robocontroller::GetPIDResponse &resp );
-bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocontroller::SetBatteryCalibResponse& resp );
 bool enablePID_callback( robocontroller::EnablePIDRequest& req, robocontroller::EnablePIDResponse& resp );
 bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req, robocontroller::EnableCommWDResponse& resp );
-bool EnableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req, robocontroller::EnableSaveToEepromResponse& resp );
+bool getBoardStatus_callback( robocontroller::GetBoardStatusRequest& req, robocontroller::GetBoardStatusResponse&resp );
+bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocontroller::SetBatteryCalibResponse& resp );
+bool enableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req, robocontroller::EnableSaveToEepromResponse& resp );
 // <<<<< Callbacks
 
 void vel_cmd_callback( const geometry_msgs::Twist& msg )
@@ -98,6 +100,22 @@ bool getPid_callback( robocontroller::GetPIDRequest &req, robocontroller::GetPID
     return ok;
 }
 
+bool getBoardStatus_callback( robocontroller::GetBoardStatusRequest& req, robocontroller::GetBoardStatusResponse& resp )
+{
+    BoardStatus status;
+
+    if( !rbCtrl->getBoardStatus( status ) )
+        return false;
+
+    resp.pid_enable = status.pidEnable;
+    resp.ramps_enable = status.accelRampEnable;
+    resp.watchdog_enable = status.wdEnable;
+    resp.saveToEeprom_enable = status.saveToEeprom;
+
+    return true;
+
+}
+
 bool setBattCalib_callback( robocontroller::SetBatteryCalibRequest& req, robocontroller::SetBatteryCalibResponse& resp )
 {
     AnalogCalibValue par_type;
@@ -122,7 +140,7 @@ bool enableCommWD_callback( robocontroller::EnableCommWDRequest& req, robocontro
     return resp.ok;
 }
 
-bool EnableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req, robocontroller::EnableSaveToEepromResponse& resp )
+bool enableSaveToEeprom_callback( robocontroller::EnableSaveToEepromRequest& req, robocontroller::EnableSaveToEepromResponse& resp )
 {
     resp.ok = rbCtrl->enableSaveToEeprom( req.enableSaveToEeprom );
 
@@ -405,7 +423,10 @@ int main( int argc, char **argv)
     ros::ServiceServer enableWdServer = nh.advertiseService( "/robocontroller/EnableCommWD", enableCommWD_callback );
 
     // Server enable EEPROM saving
-    ros::ServiceServer enableEepromServer = nh.advertiseService( "/robocontroller/EnableSaveToEeprom", EnableSaveToEeprom_callback );
+    ros::ServiceServer enableEepromServer = nh.advertiseService( "/robocontroller/EnableSaveToEeprom", enableSaveToEeprom_callback );
+
+    // Server Robocontroller Board Status
+    ros::ServiceServer getStatusServer = nh.advertiseService( "robocontroller/GetBoardStatus", getBoardStatus_callback);
 
     // >>>>> Interface to RoboController board
     rbCtrlIface = new RbCtrlIface( boardIdx, serialPort, serialbaudrate, parity.c_str()[0], data_bit, stop_bit, simulMode );
