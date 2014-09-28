@@ -454,6 +454,9 @@ int main( int argc, char **argv)
     // >>>>> Config test
     RobotConfiguration testConf;
     rbCtrl->getRobotConfig( testConf );
+
+    u_int16_t wdTime = rbCtrl->getWdTimeoutTime();
+    ROS_INFO_STREAM( "WatchDog timeout: " << wdTime << " msec");
     // <<<<< Config test
 
     // RoboController publishes telemetry at 30hz
