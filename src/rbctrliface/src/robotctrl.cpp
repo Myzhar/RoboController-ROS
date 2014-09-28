@@ -435,6 +435,9 @@ bool RobotCtrl::stopMotors()
 
 bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
 {
+    if( !mBoardStatus.saveToEeprom )
+        ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
+
     memcpy( &mRobotConfig, &config, sizeof(RobotConfiguration) );
 
     // >>>>> Robot Configuration Data (19 consequtive registers)
@@ -588,6 +591,9 @@ bool RobotCtrl::setBoardStatus( BoardStatus &status )
 
 bool RobotCtrl::enablePID( bool pidEnable, bool rampsEnable  )
 {
+    if( !mBoardStatus.saveToEeprom )
+        ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
+
     if( !mBoardStatusUpdated )
     {
         if( !updateBoardStatus() )
@@ -612,6 +618,9 @@ bool RobotCtrl::enablePID( bool pidEnable, bool rampsEnable  )
 
 bool RobotCtrl::enableWD( bool enable, u_int16_t wdTime_msec )
 {
+    if( !mBoardStatus.saveToEeprom )
+        ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
+
     if( !mBoardStatusUpdated )
     {
         if( !updateBoardStatus() )
@@ -634,6 +643,9 @@ bool RobotCtrl::enableWD( bool enable, u_int16_t wdTime_msec )
 
 bool RobotCtrl::setWdTimeoutTime( u_int16_t wdTimeout_msec )
 {
+    if( !mBoardStatus.saveToEeprom )
+        ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
+
     vector<u_int16_t> data;
     int nReg = 1;
     data.resize(nReg);
@@ -725,6 +737,9 @@ bool RobotCtrl::updateBoardStatus()
 
 bool RobotCtrl::setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_t Kd )
 {
+    if( !mBoardStatus.saveToEeprom )
+        ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
+
     vector<u_int16_t> data;
     int nReg = 3;
     data.resize(nReg);
@@ -781,6 +796,9 @@ bool RobotCtrl::getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int1
 
 bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeVal_V )
 {
+    if( !mBoardStatus.saveToEeprom )
+        ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
+
     vector<u_int16_t> data;
     int nReg = 1;
     data.resize(nReg);
