@@ -237,13 +237,13 @@ vector<u_int16_t> RbCtrlIface::readMultiReg(u_int16_t startAddr, u_int16_t nReg)
             }
             // <<<<< Reply buffer resize if needed
 
-            readRegReply.resize( nReg+2 );
+            readRegReply.resize( nReg/*+2*/ );
 
-            readRegReply[0] = (u_int16_t)startAddr;
-            readRegReply[1] = (u_int16_t)nReg;
+            /*readRegReply[0] = (u_int16_t)startAddr;
+            readRegReply[1] = (u_int16_t)nReg;*/
             for( int i=0; i<nReg; i++ )
             {
-                readRegReply[2+i] = (i+1)*1000;
+                readRegReply[/*2+*/i] = (i+1)*1000;
             }
 
             //qWarning() << PREFIX << "ModBus replies are simulated!";
@@ -285,11 +285,11 @@ vector<u_int16_t> RbCtrlIface::readMultiReg(u_int16_t startAddr, u_int16_t nReg)
             return readRegReply;
         }
 
-        readRegReply.resize( nReg+2 );
+        readRegReply.resize( nReg/*+2*/ );
 
-        readRegReply[0] = (u_int16_t)startAddr;
-        readRegReply[1] = (u_int16_t)nReg;
-        memcpy( (u_int16_t*)(readRegReply.data())+2, mReplyBuffer, nReg*sizeof(u_int16_t) );
+        /*readRegReply[0] = (u_int16_t)startAddr;
+        readRegReply[1] = (u_int16_t)nReg;*/
+        memcpy( (u_int16_t*)(readRegReply.data())/*+2*/, mReplyBuffer, nReg*sizeof(u_int16_t) );
     }
     //mBoardMutex.unlock();
 

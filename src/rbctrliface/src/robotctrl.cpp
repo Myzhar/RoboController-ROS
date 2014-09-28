@@ -36,15 +36,15 @@ bool RobotCtrl::getDebugInfo( RcDebug& debug )
 
     vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply.size() != nReg+2 )
+    if( reply.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for debug is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        ROS_WARN_STREAM( "RC reply for debug is incorrect in size, expected " << nReg << ", received " << reply.size() );
         return false;
     }
 
-    debug.enc1_period = reply[2];
-    //debug.enc2_period = reply[3];
-    debug.enc2_period = reply[4]; // TODO remember to change this to 3 when the firmware changes!
+    debug.enc1_period = reply[0];
+    //debug.enc2_period = reply[1];
+    debug.enc2_period = reply[2]; // TODO remember to change this to 1 when the firmware changes!
 
     // >>>>> Debug registers
     startAddr = WORD_DEBUG_00;
@@ -52,14 +52,14 @@ bool RobotCtrl::getDebugInfo( RcDebug& debug )
 
     vector<u_int16_t> reply2 = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply2.size() != nReg+2 )
+    if( reply2.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for debug registers is incorrect in size, expected " << nReg+2 << ", received " << reply2.size() );
+        ROS_WARN_STREAM( "RC reply for debug registers is incorrect in size, expected " << nReg << ", received " << reply2.size() );
         return false;
     }
     // <<<<< Debug registers
 
-    memcpy( debug.debug_reg, &(reply2.data()[2]), nReg );
+    memcpy( debug.debug_reg, reply2.data(), nReg );
 
     return true;
 }
@@ -82,28 +82,28 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
 
     vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply.size() != nReg+2 )
+    if( reply.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for motors is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        ROS_WARN_STREAM( "RC reply for motors is incorrect in size, expected " << nReg << ", received " << reply.size() );
         return false;
     }
 
     double speed0;
-    if(reply[2] < 32767)  // Speed is integer 2-complement!
-        speed0 = ((double)reply[2])/1000.0;
+    if(reply[0] < 32767)  // Speed is integer 2-complement!
+        speed0 = ((double)reply[0])/1000.0;
     else
-        speed0 = ((double)(reply[2]-65536))/1000.0;
+        speed0 = ((double)(reply[0]-65536))/1000.0;
     telemetry.LinSpeedLeft = speed0;
 
     double speed1;
-    if(reply[3] < 32767)  // Speed is integer 2-complement!
-        speed1 = ((double)reply[3])/1000.0;
+    if(reply[1] < 32767)  // Speed is integer 2-complement!
+        speed1 = ((double)reply[1])/1000.0;
     else
-        speed1 = ((double)(reply[3]-65536))/1000.0;
+        speed1 = ((double)(reply[1]-65536))/1000.0;
     telemetry.LinSpeedRight = speed1;
 
-    telemetry.PwmLeft = reply[4];
-    telemetry.PwmRight = reply[5];
+    telemetry.PwmLeft = reply[2];
+    telemetry.PwmRight = reply[3];
 
     // rpm = (v_lin/r)*RAD2RPM
     telemetry.RpmLeft  = RAD2RPM*(telemetry.LinSpeedLeft/(((double)(mRobotConfig.WheelRadiusLeft))/100000.0)); // Remember that wheel radius is in 0.01mm
@@ -113,13 +113,13 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     nReg = 1;
     reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply.size() != nReg+2 )
+    if( reply.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for battery is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        ROS_WARN_STREAM( "RC reply for battery is incorrect in size, expected " << nReg << ", received " << reply.size() );
         return false;
     }
 
-    telemetry.Battery = ((double)reply[2])/1000.0;
+    telemetry.Battery = ((double)reply[0])/1000.0;
 
     // >>>>> Speed Filter
     // Eliminates glitches due to uncorrect speed reading on the RoboController
@@ -160,22 +160,22 @@ bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
 
     vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply.size() != nReg+2 )
+    if( reply.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for motor speeds is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        ROS_WARN_STREAM( "RC reply for motor speeds is incorrect in size, expected " << nReg << ", received " << reply.size() );
         return false;
     }
 
 
-    if(reply[2] < 32767)  // Speed is integer 2-complement!
-        speedL = ((double)reply[2])/1000.0;
+    if(reply[0] < 32767)  // Speed is integer 2-complement!
+        speedL = ((double)reply[0])/1000.0;
     else
-        speedL = ((double)(reply[2]-65536))/1000.0;
+        speedL = ((double)(reply[0]-65536))/1000.0;
 
-    if(reply[3] < 32767)  // Speed is integer 2-complement!
-        speedR = ((double)reply[3])/1000.0;
+    if(reply[1] < 32767)  // Speed is integer 2-complement!
+        speedR = ((double)reply[1])/1000.0;
     else
-        speedR = ((double)(reply[3]-65536))/1000.0;
+        speedR = ((double)(reply[1]-65536))/1000.0;
 
     mTelemetry.LinSpeedLeft = speedL;
     mTelemetry.LinSpeedRight = speedR;
@@ -324,8 +324,8 @@ void RobotCtrl::updateMeanVar()
 
 bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )
 {
-    double speedL = fwSpeed + 0.5 * rotSpeed * mRobotConfig.WheelBase/1000.0;
-    double speedR = fwSpeed - 0.5 * rotSpeed * mRobotConfig.WheelBase/1000.0;
+    double speedL = fwSpeed + 0.5 * rotSpeed * ((double)mRobotConfig.WheelBase)/1000.0;
+    double speedR = fwSpeed - 0.5 * rotSpeed * ((double)mRobotConfig.WheelBase)/1000.0;
 
     ROS_INFO_STREAM( "fwSpeed: " << fwSpeed << " ; rotSpeed: " << rotSpeed << " m/sec" );
     ROS_INFO_STREAM( "speedL: " << speedL << " ; speedR: " << speedR << " m/sec" );
@@ -495,6 +495,42 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
     return true;
 }
 
+bool RobotCtrl::getRobotConfig( RobotConfiguration& config )
+{
+    // >>>>> Config Registers
+    u_int16_t startAddr = WORD_ROBOT_DIMENSION_WEIGHT;
+    u_int16_t nReg = 19;
+
+    vector<u_int16_t> data = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( data.size() != nReg )
+    {
+        ROS_WARN_STREAM( "RC reply for Robot Configuration is incorrect in size, expected " << nReg << ", received " << data.size() );
+        return false;
+    }
+    // <<<<< Config Registers
+
+    config.Weight                 = data[0];
+    config.Width                  = data[1];
+    config.Height                 = data[2];
+    config.Lenght                 = data[3];
+    config.WheelBase              = data[4];
+    config.WheelRadiusLeft        = data[5];
+    config.WheelRadiusRight       = data[6];
+    config.EncoderCprLeft         = data[7];
+    config.EncoderCprRight        = data[8];
+    config.MaxRpmMotorLeft        = data[9];
+    config.MaxRpmMotorRight       = data[10];
+    config.MaxAmpereMotorLeft     = data[11];
+    config.MaxAmpereMotorRight    = data[12];
+    config.MaxTorqueMotorLeft     = data[13];
+    config.MaxTorqueMotorRight    = data[14];
+    config.RatioShaftLeft         = data[15];
+    config.RatioShaftRight        = data[16];
+    config.RatioMotorLeft         = data[17];
+    config.RatioMotorRight        = data[18];
+}
+
 bool RobotCtrl::getBoardStatus( BoardStatus& status)
 {
     //if( !mBoardStatusUpdated )
@@ -624,9 +660,9 @@ u_int16_t RobotCtrl::getWdTimeoutTime()
 
     vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply.size() != nReg+2 )
+    if( reply.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for WORD_COMWATCHDOG_TIME is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        ROS_WARN_STREAM( "RC reply for WORD_COMWATCHDOG_TIME is incorrect in size, expected " << nReg << ", received " << reply.size() );
         return false;
     }
     // <<<<< Status Register
@@ -663,14 +699,14 @@ bool RobotCtrl::updateBoardStatus()
 
     vector<u_int16_t> reply1 = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply1.size() != nReg+2 )
+    if( reply1.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for WORD_STATUSBIT1 is incorrect in size, expected " << nReg+2 << ", received " << reply1.size() );
+        ROS_WARN_STREAM( "RC reply for WORD_STATUSBIT1 is incorrect in size, expected " << nReg << ", received " << reply1.size() );
         return false;
     }
     // <<<<< Status Register
 
-    u_int16_t value = reply1[2];
+    u_int16_t value = reply1[0];
 
     mBoardStatus.pidEnable = value & FLG_STATUSBI1_PID_EN;
     mBoardStatus.wdEnable = value & FLG_STATUSBI1_COMWATCHDOG;
@@ -729,16 +765,16 @@ bool RobotCtrl::getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int1
 
     vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
-    if( reply.size() != nReg+2 )
+    if( reply.size() != nReg )
     {
-        ROS_WARN_STREAM( "RC reply for PID registers is incorrect in size, expected " << nReg+2 << ", received " << reply.size() );
+        ROS_WARN_STREAM( "RC reply for PID registers is incorrect in size, expected " << nReg << ", received " << reply.size() );
         return false;
     }
     // <<<<< PID Registers
 
-    Kp = reply[2];
-    Ki = reply[3];
-    Kd = reply[4];
+    Kp = reply[0];
+    Ki = reply[1];
+    Kd = reply[2];
 
     return true;
 }
