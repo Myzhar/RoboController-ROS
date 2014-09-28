@@ -72,7 +72,7 @@ void vel_cmd_callback( const geometry_msgs::Twist& msg )
     double v = msg.linear.x;
     double omega = msg.angular.z;
 
-    ROS_INFO_STREAM( "Received Twist. [v: " << v << "; omega: " << omega <<"]" );
+    //ROS_INFO_STREAM( "Received Twist. [v: " << v << "; omega: " << omega <<"]" );
 
     if( !rbCtrl->setRobotSpeed( v, omega ) )
     {
