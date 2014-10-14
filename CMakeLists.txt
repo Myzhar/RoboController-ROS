@@ -54,6 +54,7 @@ catkin_package(
 set(robocontroller_INC_DIRS
     src/
     src/rbctrliface/include/
+    src/rcteleop/include/
 )
 
 # Specify locations of header files.
@@ -72,20 +73,35 @@ set(robocontroller_SRC
     src/rbctrliface/src/rbctrliface.cpp
     src/rbctrliface/src/robotctrl.cpp
 )
+
+set(robocontroller_teleop_SRC
+    src/robocotroller_teleop_key_node.cpp
+    src/rcteleop/src/rc_teleop_key.cpp
+)
 #########################################################
 
 
 #########################################################
 # EXECUTABLE
 add_executable( 
-	robocontroller_node 
+	robocontroller_node
 	${robocontroller_SRC}
+)
+
+add_executable( 
+        robocotroller_teleop_key_node
+	${robocontroller_teleop_SRC}
 )
 
 target_link_libraries(
 	robocontroller_node 
 	${catkin_LIBRARIES} 
 	modbus
+)
+
+target_link_libraries(
+        robocotroller_teleop_key_node
+	${catkin_LIBRARIES} 
 )
 #########################################################
 
