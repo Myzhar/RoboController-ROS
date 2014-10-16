@@ -13,6 +13,9 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
 )
 
+find_package( PkgConfig REQUIRED )
+pkg_check_modules ( ncurses++ REQUIRED ncurses++ )
+
 #########################################################
 # MESSAGES
 add_message_files(
@@ -101,7 +104,8 @@ target_link_libraries(
 
 target_link_libraries(
         robocotroller_teleop_key_node
-	${catkin_LIBRARIES} 
+	${catkin_LIBRARIES}	
+	ncurses
 )
 #########################################################
 

@@ -16,13 +16,17 @@
     <buildtool_depend>catkin</buildtool_depend>
 
     <build_depend>libmodbus-dev</build_depend>
+    <build_depend>ncurses++</build_depend>
     <build_depend>geometry_msgs</build_depend>
     <build_depend>std_msgs</build_depend>
     <build_depend>std_srvs</build_depend>
     <build_depend>roscpp</build_depend>
     <build_depend>message_generation</build_depend>
+	
+
 
     <run_depend>libmodbus</run_depend>
+    <run_depend>ncurses++</run_depend>
     <run_depend>geometry_msgs</run_depend>
     <run_depend>std_msgs</run_depend>
     <run_depend>std_srvs</run_depend>

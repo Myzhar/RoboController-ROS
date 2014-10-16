@@ -1,8 +1,6 @@
 #include <rc_teleop_key.h>
 #include <geometry_msgs/Twist.h>
-
-extern int kfd;
-extern struct termios cooked, raw;
+#include <ncurses.h>
 
 TeleopRcKey::TeleopRcKey():
     mLinear(0.0),
@@ -19,86 +17,98 @@ TeleopRcKey::TeleopRcKey():
 
 void TeleopRcKey::keyLoop()
 {
-    char c;
+    int c;
     bool dirty=false;
 
-    // get the console in raw mode
-    tcgetattr(kfd, &cooked);
-    memcpy(&raw, &cooked, sizeof(struct termios));
-    raw.c_lflag &=~ (ICANON | ECHO);
-
-    // Setting a new line, then end of file
-    raw.c_cc[VEOL] = 1;
-    raw.c_cc[VEOF] = 2;
-    tcsetattr(kfd, TCSANOW, &raw);
+    initscr();
+    cbreak();
+    noecho();
+    keypad(stdscr, TRUE);
+    timeout(100);
 
     puts("Reading from keyboard");
     puts("---------------------------");
-    puts("Use arrow keys to move the turtle.");
+    puts("Use arrow keys to move the robot.");
 
-    for(;;)
+    while(1)
     {
-        // get the next event from the keyboard
-        if(read(kfd, &c, 1) < 0)
-        {
-            perror("read():");
-            exit(-1);
-        }
+        dirty = false;
 
-        ROS_DEBUG("value: 0x%02X\n", c);
+        c = getch();
+
+        ROS_INFO_STREAM("value: " << c << "\r");
 
         switch(c)
         {
-        case KEYCODE_L:
+        case KEY_LEFT:
         {
             ROS_DEBUG("LEFT");
             mAngular += mAngStep;
             dirty = true;
             break;
         }
-        case KEYCODE_R:
+        case KEY_RIGHT:
         {
             ROS_DEBUG("RIGHT");
             mAngular -= mAngStep;
             dirty = true;
             break;
         }
-        case KEYCODE_U:
+        case KEY_UP:
         {
             ROS_DEBUG("UP");
             mLinear += mLinStep;
             dirty = true;
             break;
         }
-        case KEYCODE_D:
+        case KEY_DOWN:
         {
             ROS_DEBUG("DOWN");
             mLinear -= mLinStep;
             dirty = true;
             break;
         }
+        case 'q':
+        {
+            endwin();
+            exit(0);
+        }
         default:
         {
             if( mLinear > 0 )
+            {
                 mLinear -= mLinStep;
+                dirty = true;
+            }
             else if( mLinear < 0  )
+            {
                 mLinear += mLinStep;
+                dirty = true;
+            }
+
 
             if( mAngular > 0 )
+            {
                 mAngular -= mAngStep;
+                dirty = true;
+            }
             else if( mAngular < 0  )
+            {
                 mAngular += mAngStep;
+
+                dirty = true;
+            }
         }
         }
 
-
+        ROS_INFO_STREAM( "mLinear: " << mLinear << " - mAngular: " << mAngular << "\r");
 
         geometry_msgs::Twist vel;
 
         vel.linear.x = mLinear;
         vel.angular.z = mAngular;
 
-        if(dirty ==true)
+        if(dirty==true)
         {
             mVelPub.publish(vel);
             dirty=false;

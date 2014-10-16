@@ -3,10 +3,14 @@
 #include <termios.h>
 #include <stdio.h>
 
-#define KEYCODE_R 0x43
-#define KEYCODE_L 0x44
-#define KEYCODE_U 0x41
-#define KEYCODE_D 0x42
+//#define KEYCODE_R 0x43
+//#define KEYCODE_L 0x44
+//#define KEYCODE_U 0x41
+//#define KEYCODE_D 0x42
+#define KEYCODE_R 0x6a
+#define KEYCODE_L 0x69
+#define KEYCODE_U 0x67
+#define KEYCODE_D 0x6c
 #define KEYCODE_Q 0x71
 
 class TeleopRcKey

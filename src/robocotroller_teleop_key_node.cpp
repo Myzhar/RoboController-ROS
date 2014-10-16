@@ -13,7 +13,7 @@ void quit(int sig)
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "teleop_turtle");
+  ros::init(argc, argv, "teleop_keyboard");
 
   TeleopRcKey teleop_turtle;
 
