@@ -1,6 +1,10 @@
 #include <rc_teleop_key.h>
 #include <geometry_msgs/Twist.h>
 #include <ncurses.h>
+#include <math.h>
+#include <string>
+
+using namespace std;
 
 TeleopRcKey::TeleopRcKey():
     mLinear(0.0),
@@ -8,70 +12,125 @@ TeleopRcKey::TeleopRcKey():
     mMaxLin(1.0),
     mMaxAng(3.14),
     mLinStep(0.1),
-    mAngStep(0.314)
+    mAngStep(0.314),
+    mKeyTimeout(100)
 {
     mVelPub = m_nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
 
-    // TODO set teleoperation variables with parameters
+    // >>>>> Parameters
+    string nodeName = ros::this_node::getName();
+    string nameSpace = ros::this_node::getNamespace();
+
+    string paramStr;
+
+    paramStr = ( nameSpace + nodeName + "/teleop_key/Max_linear");
+    if(m_nh.hasParam( paramStr ))
+        m_nh.getParam(paramStr, mMaxLin);
+    else
+        m_nh.setParam(paramStr, mMaxLin );
+
+    paramStr = ( nameSpace + nodeName + "/teleop_key/Max_angular");
+    if(m_nh.hasParam( paramStr ))
+        m_nh.getParam(paramStr, mMaxAng);
+    else
+        m_nh.setParam(paramStr, mMaxAng );
+
+    paramStr = ( nameSpace + nodeName + "/teleop_key/Lin_step");
+    if(m_nh.hasParam( paramStr ))
+        m_nh.getParam(paramStr, mMaxAng);
+    else
+        m_nh.setParam(paramStr, mMaxAng );
+
+    paramStr = ( nameSpace + nodeName + "/teleop_key/Ang_step");
+    if(m_nh.hasParam( paramStr ))
+        m_nh.getParam(paramStr, mAngStep);
+    else
+        m_nh.setParam(paramStr, mAngStep );
+
+    paramStr = ( nameSpace + nodeName + "/teleop_key/Key_timeout");
+    if(m_nh.hasParam( paramStr ))
+        m_nh.getParam(paramStr, mKeyTimeout);
+    else
+        m_nh.setParam(paramStr, mKeyTimeout );
+    // <<<<< Parameters
+
 }
 
 void TeleopRcKey::keyLoop()
 {
-    int c;
-    bool dirty=false;
-
+    // >>>>> nCurses initization
     initscr();
     cbreak();
     noecho();
-    keypad(stdscr, TRUE);
-    timeout(100);
+    timeout(mKeyTimeout);
+    // <<<<< nCurses initization
 
-    puts("Reading from keyboard");
-    puts("---------------------------");
-    puts("Use arrow keys to move the robot.");
+    int c;
+    bool dirty=false;
 
-    while(1)
+    c = getch();
+
+    ROS_INFO_STREAM("-----------------------------------\r");
+    ROS_INFO_STREAM("      Keyboard teleoperation       \r");
+    ROS_INFO_STREAM("-----------------------------------\r");
+    ROS_INFO_STREAM("- Use arrow keys to move the robot.\r");
+    ROS_INFO_STREAM("- Press SPACEBAR to stop the robot.\r");
+    ROS_INFO_STREAM("- Press Q to exit.\r");
+    ROS_INFO_STREAM("-----------------------------------\r");
+
+    bool stop = false;
+
+    while(!stop)
     {
         dirty = false;
 
         c = getch();
 
-        ROS_INFO_STREAM("value: " << c << "\r");
+        ROS_DEBUG_STREAM("Key pressed: " << c << "\r");
 
         switch(c)
         {
         case KEY_LEFT:
         {
-            ROS_DEBUG("LEFT");
+            ROS_DEBUG_STREAM("LEFT\r");
             mAngular += mAngStep;
             dirty = true;
             break;
         }
         case KEY_RIGHT:
         {
-            ROS_DEBUG("RIGHT");
+            ROS_DEBUG_STREAM("RIGHT\r");
             mAngular -= mAngStep;
             dirty = true;
             break;
         }
         case KEY_UP:
         {
-            ROS_DEBUG("UP");
+            ROS_DEBUG_STREAM("UP\r");
             mLinear += mLinStep;
             dirty = true;
             break;
         }
         case KEY_DOWN:
         {
-            ROS_DEBUG("DOWN");
+            ROS_DEBUG_STREAM("DOWN\r");
             mLinear -= mLinStep;
             dirty = true;
             break;
         }
-        case 'q':
+        case ' ':
         {
-            endwin();
-            exit(0);
+            ROS_DEBUG_STREAM("STOP\r");
+            mLinear = 0.0;
+            mAngular = 0.0;
+            dirty = true;
+            break;
+        }
+        case 'q':
+        case 'Q':
+        {
+            ROS_DEBUG_STREAM("EXIT\r");
+            stop = true;
         }
         default:
         {
@@ -101,20 +160,42 @@ void TeleopRcKey::keyLoop()
         }
         }
 
-        ROS_INFO_STREAM( "mLinear: " << mLinear << " - mAngular: " << mAngular << "\r");
-
         geometry_msgs::Twist vel;
+
+        // >>>>> Saturations
+        if( mLinear > mMaxLin )
+            mLinear = mMaxLin;
+        else if( mLinear < -mMaxLin )
+            mLinear = -mMaxLin;
+
+        if( mAngular > mMaxAng )
+            mAngular = mMaxAng;
+        else if( mAngular < -mMaxAng )
+            mAngular = -mMaxAng;
+
+        if( fabs(mLinear) < 0.01 )
+            mLinear = 0.0;
+
+        if( fabs(mAngular) < 0.01 )
+            mAngular = 0.0;
 
         vel.linear.x = mLinear;
         vel.angular.z = mAngular;
+        // <<<<< Saturations
 
         if(dirty==true)
         {
+            ROS_INFO_STREAM( "Robot speed - Linear: " << mLinear << " - Angular: " << mAngular << "\r");
             mVelPub.publish(vel);
             dirty=false;
         }
     }
 
+    endwin();
+
+    ROS_INFO_STREAM("---------------------------\r");
+    ROS_INFO_STREAM("STOPPED BY USER\r");
+    ROS_INFO_STREAM("---------------------------\r");
 
     return;
 }

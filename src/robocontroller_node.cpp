@@ -174,28 +174,19 @@ void init_system( ros::NodeHandle& nh )
     // >>>>> Global
     paramStr = ( nameSpace + nodeName + "/general/Telemetry_freq");
     if(nh.hasParam( paramStr ))
-    {
         nh.getParam(paramStr, telem_freq);
-        ROS_INFO_STREAM( boardIdx );
-    }
     else
         nh.setParam(paramStr, telem_freq );
 
     paramStr = ( nameSpace + nodeName + "/general/Command_timeout");
-    if(nh.hasParam( paramStr ))
-    {
+    if(nh.hasParam( paramStr ))    
         nh.getParam(paramStr, vel_cmd_timeout_sec);
-        ROS_INFO_STREAM( boardIdx );
-    }
     else
         nh.setParam(paramStr, vel_cmd_timeout_sec );
 
     paramStr = ( nameSpace + nodeName + "/general/Speed_filter_enabled");
-    if(nh.hasParam( paramStr ))
-    {
-        nh.getParam(paramStr, speed_filter_enabled);
-        ROS_INFO_STREAM( boardIdx );
-    }
+    if(nh.hasParam( paramStr ))    
+        nh.getParam(paramStr, speed_filter_enabled);        
     else
         nh.setParam(paramStr, speed_filter_enabled );
     // <<<<< Global
