@@ -13,6 +13,7 @@ TeleopRcKey::TeleopRcKey():
     mMaxAng(3.14),
     mLinStep(0.1),
     mAngStep(0.314),
+    mSpeedRatio(1.0),
     mKeyTimeout(100)
 {
     mVelPub = m_nh.advertise<geometry_msgs::Twist>("/cmd_vel", 10);
@@ -60,6 +61,7 @@ void TeleopRcKey::keyLoop()
 {
     // >>>>> nCurses initization
     initscr();
+    keypad(stdscr, TRUE);
     cbreak();
     noecho();
     timeout(mKeyTimeout);
@@ -76,6 +78,9 @@ void TeleopRcKey::keyLoop()
     ROS_INFO_STREAM("- Use arrow keys to move the robot.\r");
     ROS_INFO_STREAM("- Press SPACEBAR to stop the robot.\r");
     ROS_INFO_STREAM("- Press Q to exit.\r");
+    ROS_INFO_STREAM("- Press 1 for Max_speed.\r");
+    ROS_INFO_STREAM("- Press 2 for Max speed/2.\r");
+    ROS_INFO_STREAM("- Press 3 for Max speed/3.\r");
     ROS_INFO_STREAM("-----------------------------------\r");
 
     bool stop = false;
@@ -86,6 +91,9 @@ void TeleopRcKey::keyLoop()
 
         c = getch();
 
+        double linStep = mLinStep*mSpeedRatio;
+        double angStep = mAngStep*mSpeedRatio;
+
         ROS_DEBUG_STREAM("Key pressed: " << c << "\r");
 
         switch(c)
@@ -93,28 +101,28 @@ void TeleopRcKey::keyLoop()
         case KEY_LEFT:
         {
             ROS_DEBUG_STREAM("LEFT\r");
-            mAngular += mAngStep;
+            mAngular -= angStep;
             dirty = true;
             break;
         }
         case KEY_RIGHT:
         {
             ROS_DEBUG_STREAM("RIGHT\r");
-            mAngular -= mAngStep;
+            mAngular += angStep;
             dirty = true;
             break;
         }
         case KEY_UP:
         {
             ROS_DEBUG_STREAM("UP\r");
-            mLinear += mLinStep;
+            mLinear += linStep;
             dirty = true;
             break;
         }
         case KEY_DOWN:
         {
             ROS_DEBUG_STREAM("DOWN\r");
-            mLinear -= mLinStep;
+            mLinear -= linStep;
             dirty = true;
             break;
         }
@@ -123,6 +131,24 @@ void TeleopRcKey::keyLoop()
             ROS_DEBUG_STREAM("STOP\r");
             mLinear = 0.0;
             mAngular = 0.0;
+            dirty = true;
+            break;
+        }
+        case '1':
+        {
+            mSpeedRatio = 1.0;
+            dirty = true;
+            break;
+        }
+        case '2':
+        {
+            mSpeedRatio = 0.5;
+            dirty = true;
+            break;
+        }
+        case '3':
+        {
+            mSpeedRatio = 0.333333;
             dirty = true;
             break;
         }
@@ -136,24 +162,24 @@ void TeleopRcKey::keyLoop()
         {
             if( mLinear > 0 )
             {
-                mLinear -= mLinStep;
+                mLinear -= linStep;
                 dirty = true;
             }
             else if( mLinear < 0  )
             {
-                mLinear += mLinStep;
+                mLinear += linStep;
                 dirty = true;
             }
 
 
             if( mAngular > 0 )
             {
-                mAngular -= mAngStep;
+                mAngular -= angStep;
                 dirty = true;
             }
             else if( mAngular < 0  )
             {
-                mAngular += mAngStep;
+                mAngular += angStep;
 
                 dirty = true;
             }
@@ -163,15 +189,15 @@ void TeleopRcKey::keyLoop()
         geometry_msgs::Twist vel;
 
         // >>>>> Saturations
-        if( mLinear > mMaxLin )
-            mLinear = mMaxLin;
-        else if( mLinear < -mMaxLin )
-            mLinear = -mMaxLin;
+        if( mLinear > mMaxLin*mSpeedRatio )
+            mLinear = mMaxLin*mSpeedRatio;
+        else if( mLinear < -mMaxLin*mSpeedRatio )
+            mLinear = -mMaxLin*mSpeedRatio;
 
-        if( mAngular > mMaxAng )
-            mAngular = mMaxAng;
-        else if( mAngular < -mMaxAng )
-            mAngular = -mMaxAng;
+        if( mAngular > mMaxAng*mSpeedRatio )
+            mAngular = mMaxAng*mSpeedRatio;
+        else if( mAngular < -mMaxAng*mSpeedRatio )
+            mAngular = -mMaxAng*mSpeedRatio;
 
         if( fabs(mLinear) < 0.01 )
             mLinear = 0.0;

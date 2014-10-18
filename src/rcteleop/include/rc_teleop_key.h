@@ -20,6 +20,8 @@ private:
   double mLinStep;
   double mAngStep;
 
+  double mSpeedRatio;
+
   int mKeyTimeout;
 
   ros::Publisher mVelPub;
