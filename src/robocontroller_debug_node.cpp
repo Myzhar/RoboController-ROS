@@ -16,7 +16,7 @@ using namespace std;
 using namespace robocontroller;
 
 // >>>>> Global params
-double debug_pub_freq = 10;
+double debug_pub_freq = 100;
 // <<<<< Global params
 
 RbCtrlIface* rbCtrlIface= NULL; // RoboController Interface
@@ -29,7 +29,7 @@ int serialbaudrate = 57600;
 string parity = "N";
 int data_bit = 8;
 int stop_bit = 1;
-bool simulMode = false;
+bool simulMode = true;
 // <<<<< Serial port parameters
 
 bool setRegister_callback( robocontroller::SetRegisterRequest& req,
