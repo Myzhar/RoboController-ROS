@@ -29,7 +29,7 @@ int serialbaudrate = 57600;
 string parity = "N";
 int data_bit = 8;
 int stop_bit = 1;
-bool simulMode = true;
+bool simulMode = false;
 // <<<<< Serial port parameters
 
 bool setRegister_callback( robocontroller::SetRegisterRequest& req,
