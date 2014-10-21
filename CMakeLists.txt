@@ -19,10 +19,15 @@ pkg_check_modules ( ncurses++ REQUIRED ncurses++ )
 #########################################################
 # MESSAGES
 add_message_files(
-    FILES    
-    Pose.msg
-    Debug.msg
-    Telemetry.msg
+	FILES    
+	Pose.msg
+	Debug.msg
+	Telemetry.msg
+	Debug_00_23.msg
+	Debug_50_53.msg
+	Debug_200_220.msg
+	Debug_250_259.msg
+	Debug_60000_60019.msg
 )
 
 # SERVICES
@@ -35,6 +40,7 @@ add_service_files(
    GetBoardStatus.srv
    SetBatteryCalib.srv
    EnableSaveToEeprom.srv
+   SetRegister.srv
 )
 
 generate_messages(
@@ -78,8 +84,14 @@ set(robocontroller_SRC
 )
 
 set(robocontroller_teleop_SRC
-    src/robocotroller_teleop_key_node.cpp
+    src/robocontroller_teleop_key_node.cpp
     src/rcteleop/src/rc_teleop_key.cpp
+)
+
+set(robocontroller_debug_SRC
+	src/robocontroller_debug_node.cpp
+	src/rbctrliface/src/rbctrliface.cpp
+	src/rbctrliface/src/robotctrl.cpp
 )
 #########################################################
 
@@ -91,9 +103,29 @@ add_executable(
 	${robocontroller_SRC}
 )
 
+add_dependencies(
+	robocontroller_node 
+	${PROJECT_NAME}_generate_messages_cpp
+)
+
 add_executable( 
-        robocotroller_teleop_key_node
+        robocontroller_teleop_key_node
 	${robocontroller_teleop_SRC}
+)
+
+add_dependencies(
+	robocontroller_teleop_key_node 
+	${PROJECT_NAME}_generate_messages_cpp
+)
+
+add_executable( 
+        robocontroller_debug_node
+	${robocontroller_debug_SRC}
+)
+
+add_dependencies(
+	robocontroller_debug_node 
+	${PROJECT_NAME}_generate_messages_cpp
 )
 
 target_link_libraries(
@@ -103,9 +135,20 @@ target_link_libraries(
 )
 
 target_link_libraries(
-        robocotroller_teleop_key_node
+        robocontroller_teleop_key_node
 	${catkin_LIBRARIES}	
 	ncurses
 )
-#########################################################
 
+target_link_libraries(
+	robocontroller_debug_node 
+	${catkin_LIBRARIES} 
+	modbus
+)
+
+
+
+
+
+
+#########################################################

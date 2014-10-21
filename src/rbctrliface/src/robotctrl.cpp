@@ -838,4 +838,29 @@ bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeV
     return true;
 }
 
+bool RobotCtrl::setRegister( u_int16_t regIdx, u_int16_t value )
+{
+    vector<u_int16_t> data;
+    int nReg = 1;
+    data.resize(nReg);
+    data[0] = value;
+    u_int16_t startAddr = regIdx;
+
+    if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
+    {
+        ROS_ERROR_STREAM( "Error setting value (%" << value << ") to register #" << regIdx << " on RoboController");
+
+        return false;
+    }
+
+    ROS_INFO_STREAM( "WatchDog parameters sent to RoboController");
+
+    return true;
+}
+
+vector<u_int16_t>  RobotCtrl::getRegisters( u_int16_t startAddr, u_int16_t nReg )
+{
+    return mRbCtrl->readMultiReg( startAddr, nReg );
+}
+
 }

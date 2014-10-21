@@ -46,6 +46,9 @@ public:
 
     bool setBattCalibValue(AnalogCalibValue valueType, double curChargeVal_V );
 
+    bool setRegister(u_int16_t regIdx, u_int16_t value );
+    vector<u_int16_t>  getRegisters( u_int16_t startAddr, u_int16_t nReg );
+
 private:
     void initSpeedFilter();
     void updateMeanVar();

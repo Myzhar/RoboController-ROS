@@ -1,0 +1,4 @@
+uint16 resister_idx
+uint16 register_value
+---
+bool ok
