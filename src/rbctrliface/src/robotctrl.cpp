@@ -1,7 +1,8 @@
 #include "robotctrl.h"
 #include "modbus_registers.h"
 
-#define RAD2RPM 9.549296585514
+#define RADPS2RPM 9.549296585514
+#define RPM2RADPS 0.104719755119
 
 namespace robocontroller
 {
@@ -30,11 +31,11 @@ RobotCtrl::RobotCtrl(ros::NodeHandle* nh, RbCtrlIface *rbCtrl)
 
 bool RobotCtrl::getDebugInfo( RcDebug& debug )
 {
-    u_int16_t startAddr = WORD_ENC1_PERIOD;
-    //u_int16_t nReg = 2;
-    u_int16_t nReg = 3; // TODO remember to change this to 2 when the firmware changes!
+    uint16_t startAddr = WORD_ENC1_PERIOD;
+    //uint16_t nReg = 2;
+    uint16_t nReg = 3; // TODO remember to change this to 2 when the firmware changes!
 
-    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply.size() != nReg )
     {
@@ -50,7 +51,7 @@ bool RobotCtrl::getDebugInfo( RcDebug& debug )
     startAddr = WORD_DEBUG_00;
     nReg = 20;
 
-    vector<u_int16_t> reply2 = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<uint16_t> reply2 = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply2.size() != nReg )
     {
@@ -77,10 +78,10 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     // WORD_RD_PWM_CH1 22
     // WORD_RD_PWM_CH2 23
 
-    u_int16_t startAddr = WORD_ENC1_SPEED;
-    u_int16_t nReg = 4;
+    uint16_t startAddr = WORD_ENC1_SPEED;
+    uint16_t nReg = 4;
 
-    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply.size() != nReg )
     {
@@ -106,8 +107,8 @@ bool RobotCtrl::getTelemetry( RobotTelemetry& telemetry)
     telemetry.PwmRight = reply[3];
 
     // rpm = (v_lin/r)*RAD2RPM
-    telemetry.RpmLeft  = RAD2RPM*(telemetry.LinSpeedLeft/(((double)(mRobotConfig.WheelRadiusLeft))/100000.0)); // Remember that wheel radius is in 0.01mm
-    telemetry.RpmRight = RAD2RPM*(telemetry.LinSpeedRight/(((double)(mRobotConfig.WheelRadiusRight))/100000.0)); // Remember that wheel radius is in 0.01mm
+    telemetry.RpmLeft  = RADPS2RPM*(telemetry.LinSpeedLeft/(((double)(mRobotConfig.WheelRadiusLeft))/100000.0)); // Remember that wheel radius is in 0.01mm
+    telemetry.RpmRight = RADPS2RPM*(telemetry.LinSpeedRight/(((double)(mRobotConfig.WheelRadiusRight))/100000.0)); // Remember that wheel radius is in 0.01mm
 
     startAddr = WORD_TENSIONE_ALIM;
     nReg = 1;
@@ -153,32 +154,9 @@ void RobotCtrl::getPose( RobotPose& pose)
     memcpy( &pose, &mPose, sizeof(RobotPose) );
 }
 
-bool RobotCtrl::getMotorSpeeds(double& speedL, double& speedR )
+bool RobotCtrl::getWheelLinSpeeds(double& speedL, double& speedR )
 {
-    u_int16_t startAddr = WORD_ENC1_SPEED;
-    u_int16_t nReg = 2;
 
-    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
-
-    if( reply.size() != nReg )
-    {
-        ROS_WARN_STREAM( "RC reply for motor speeds is incorrect in size, expected " << nReg << ", received " << reply.size() );
-        return false;
-    }
-
-
-    if(reply[0] < 32767)  // Speed is integer 2-complement!
-        speedL = ((double)reply[0])/1000.0;
-    else
-        speedL = ((double)(reply[0]-65536))/1000.0;
-
-    if(reply[1] < 32767)  // Speed is integer 2-complement!
-        speedR = ((double)reply[1])/1000.0;
-    else
-        speedR = ((double)(reply[1]-65536))/1000.0;
-
-    mTelemetry.LinSpeedLeft = speedL;
-    mTelemetry.LinSpeedRight = speedR;
 
     return true;
 }
@@ -346,10 +324,10 @@ bool RobotCtrl::setRobotSpeed( double fwSpeed, double rotSpeed )
         mSpeedVarRight = 0.0;
     }
 
-    return setMotorSpeeds( speedL, speedR );
+    return setWheelLinSpeeds( speedL, speedR );
 }
 
-bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
+bool RobotCtrl::setWheelLinSpeeds( double speedL, double speedR )
 {
     if( mMotorCtrlMode != mcPID )
     {
@@ -374,27 +352,106 @@ bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
         speedR = -32.768;
     // <<<<< 16 bit saturation
 
-    // >>>>> New SetPoint to RoboController
-    u_int16_t address = WORD_PWM_CH1;
+    // TODO convert in rad/sec, and call setWheelRotSpeed
 
-    vector<u_int16_t> data;
+}
+
+bool RobotCtrl::setWheelRPM(double wheelRpmL, double wheelRpmR )
+{
+    // TODO convert in rad/sec, apply ratios and call setEncoderRotSpeed
+}
+
+bool RobotCtrl::getWheelRPM(double &wheelRpmL, double &wheelRpmR )
+{}
+
+bool RobotCtrl::setWheelRotSpeed(double wheelRotSpeedL, double wheelRotSpeedR )
+{
+    double ratioL = 1.0; // Ratio is 1.0 when encoder is mounted on the wheel shaft
+    double ratioR = 1.0; // Ratio is 1.0 when encoder is mounted on the wheel shaft
+
+    if( mRobotConfig.EncoderPosition == Motor )
+    {
+        ratioL = mRobotConfig.RatioMotorLeft/mRobotConfig.RatioShaftLeft;
+        ratioR = mRobotConfig.RatioMotorRight/mRobotConfig.RatioShaftRight;
+    }
+
+    double encSpeedL = wheelRotSpeedL*ratioL;
+    double encSpeedR = wheelRotSpeedR*ratioR;
+
+    return setEncoderRotSpeed( encSpeedL, encSpeedR );
+}
+
+bool RobotCtrl::getWheelRotSpeed(double &wheelRotSpeedL, double &wheelRotSpeedR )
+{
+    double encSpeedR;
+    double encSpeedL;
+
+    if( !getEncoderRotSpeed( encSpeedL, encSpeedR) )
+        return false;
+
+    double ratioL = 1.0; // Ratio is 1.0 when encoder is mounted on the wheel shaft
+    double ratioR = 1.0; // Ratio is 1.0 when encoder is mounted on the wheel shaft
+
+    if( mRobotConfig.EncoderPosition == Motor )
+    {
+        ratioL = mRobotConfig.RatioMotorLeft/mRobotConfig.RatioShaftLeft;
+        ratioR = mRobotConfig.RatioMotorRight/mRobotConfig.RatioShaftRight;
+    }
+
+    wheelRotSpeedL = encSpeedL/ratioL;
+    wheelRotSpeedR = encSpeedR/ratioR;
+
+    return true;
+}
+
+bool RobotCtrl::setEncoderRotSpeed(double encoderRotSpeedL, double encoderRotSpeedR )
+{
+    if( mMotorCtrlMode != mcPID )
+    {
+        ROS_ERROR_STREAM( "It is not possible to set the speeds of the motors. PID in not enabled");
+        return false;
+    }
+
+    /*! \note: rotation speed must be sent to RoboController in 0.1 rad/sec
+     * so we must convert RPM in rad/sec before sending
+     */
+
+    double scaledRotL =  encoderRotSpeedL * 10.0;
+    double scaledRotR =  encoderRotSpeedR * 10.0;
+
+    // >>>>> 16 bit saturation
+    if(scaledRotL > 32767.0)
+        scaledRotL = 32767.0;
+    if(scaledRotL < -32768.0)
+        scaledRotL = -32768.0;
+
+    if(scaledRotR > 32767.0)
+        scaledRotR = 32767.0;
+    if(scaledRotR < -32768.0)
+        scaledRotR = -32768.0;
+    // <<<<< 16 bit saturation
+
+    // >>>>> New SetPoint to RoboController
+    uint16_t address = WORD_PWM_CH1;
+
+    vector<uint16_t> data;
     data.resize(2);
 
-    u_int16_t sp; // Speed is integer 2-complement!
-    if(speedL >= 0)
-        sp = (u_int16_t)(speedL*1000.0);
+    uint16_t sp; // Speed is integer 2-complement!
+    if(scaledRotL >= 0)
+        sp = (uint16_t)(scaledRotL);
     else
-        sp = (u_int16_t)(speedL*1000.0+65536.0);
+        sp = (uint16_t)(scaledRotL+65536.0);
 
-    //u_int16_t sp = (u_int16_t)(speed*1000.0+32767.5);
+    //uint16_t sp = (uint16_t)(speed*1000.0+32767.5);
     data[0] = sp;
 
-    if(speedR >= 0)
-        sp = (u_int16_t)(speedR*1000.0);
+    if(scaledRotR >= 0)
+        sp = (uint16_t)(scaledRotR);
     else
-        sp = (u_int16_t)(speedR*1000.0+65536.0);
+        sp = (uint16_t)(scaledRotR+65536.0);
 
-    //u_int16_t sp = (u_int16_t)(speed*1000.0+32767.5);
+    //uint16_t sp = (uint16_t)(speed*1000.0+32767.5);
     data[1] = sp;
 
     bool commOk = mRbCtrl->writeMultiReg( address, 2, data );
@@ -402,13 +459,40 @@ bool RobotCtrl::setMotorSpeeds( double speedL, double speedR )
 
     if( commOk )
     {
-        if( speedL!=0.0 && speedL!=0 )
+        if( scaledRotL!=0.0 || scaledRotR!=0.0 )
             mMotStopped = false;
         else
             mMotStopped = true;
     }
 
     return commOk;
+}
+
+bool RobotCtrl::getEncoderRotSpeed(double &encoderRotSpeedL, double &encoderRotSpeedR )
+{
+    uint16_t startAddr = WORD_ENC1_SPEED;
+    uint16_t nReg = 2;
+
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+
+    if( reply.size() != nReg )
+    {
+        ROS_WARN_STREAM( "RC reply for motor speeds is incorrect in size, expected " << nReg << ", received " << reply.size() );
+        return false;
+    }
+
+    if(reply[0] < 32767)  // Speed is integer 2-complement!
+        encoderRotSpeedL = ((double)reply[0])/10.0;
+    else
+        encoderRotSpeedL = ((double)(reply[0]-65536))/10.0;
+
+    if(reply[1] < 32767)  // Speed is integer 2-complement!
+        encoderRotSpeedR = ((double)reply[1])/10.0;
+    else
+        encoderRotSpeedR = ((double)(reply[1]-65536))/10.0;
+
+    mTelemetry.LinSpeedLeft = encoderRotSpeedL;
+    mTelemetry.LinSpeedRight = encoderRotSpeedR;
 }
 
 bool RobotCtrl::stopMotors()
@@ -418,7 +502,7 @@ bool RobotCtrl::stopMotors()
     ros::Rate rate( 30 );
     while( 1 ) // Try to stop the motors 5 times for security!
     {
-        if( setMotorSpeeds( 0.0, 0.0) )
+        if( setWheelLinSpeeds( 0.0, 0.0) )
         {
             mMotStopped = true;
             return true;
@@ -441,10 +525,10 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
     memcpy( &mRobotConfig, &config, sizeof(RobotConfiguration) );
 
     // >>>>> Robot Configuration Data (19 consequtive registers)
-    vector<u_int16_t> data;
+    vector<uint16_t> data;
     int nReg = 19;
     data.resize(nReg);
-    u_int16_t startAddr =  WORD_ROBOT_DIMENSION_WEIGHT;
+    uint16_t startAddr =  WORD_ROBOT_DIMENSION_WEIGHT;
 
     data[0]  = mRobotConfig.Weight;
     data[1]  = mRobotConfig.Width;
@@ -478,7 +562,7 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
     data.resize(nReg);
     startAddr = WORD_STATUSBIT2;
 
-    u_int16_t statusVal = 0;
+    uint16_t statusVal = 0;
     if(mRobotConfig.EncoderPosition)
         statusVal |= FLG_STATUSBI2_EEPROM_ENCODER_POSITION;
     if(mRobotConfig.MotorEnableLevel)
@@ -501,10 +585,10 @@ bool RobotCtrl::setRobotConfig( RobotConfiguration& config )
 bool RobotCtrl::getRobotConfig( RobotConfiguration& config )
 {
     // >>>>> Config Registers
-    u_int16_t startAddr = WORD_ROBOT_DIMENSION_WEIGHT;
-    u_int16_t nReg = 19;
+    uint16_t startAddr = WORD_ROBOT_DIMENSION_WEIGHT;
+    uint16_t nReg = 19;
 
-    vector<u_int16_t> data = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<uint16_t> data = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( data.size() != nReg )
     {
@@ -549,7 +633,7 @@ bool RobotCtrl::getBoardStatus( BoardStatus& status)
 
 bool RobotCtrl::setBoardStatus( BoardStatus &status )
 {
-    u_int16_t statusVal = 0x0000;
+    uint16_t statusVal = 0x0000;
     if(status.accelRampEnable)
         statusVal |= FLG_STATUSBI1_EEPROM_RAMP_EN;
     if(status.pidEnable)
@@ -564,11 +648,11 @@ bool RobotCtrl::setBoardStatus( BoardStatus &status )
     if(status.wdEnable)
         statusVal |= FLG_STATUSBI1_COMWATCHDOG;
 
-    vector<u_int16_t> data;
+    vector<uint16_t> data;
     int nReg = 1;
     data.resize(nReg);
     data[0] = statusVal;
-    u_int16_t startAddr = WORD_STATUSBIT1;
+    uint16_t startAddr = WORD_STATUSBIT1;
 
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
@@ -616,7 +700,7 @@ bool RobotCtrl::enablePID( bool pidEnable, bool rampsEnable  )
     return true;
 }
 
-bool RobotCtrl::enableWD( bool enable, u_int16_t wdTime_msec )
+bool RobotCtrl::enableWD( bool enable, uint16_t wdTime_msec )
 {
     if( !mBoardStatus.saveToEeprom )
         ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
@@ -641,16 +725,16 @@ bool RobotCtrl::enableWD( bool enable, u_int16_t wdTime_msec )
     return setWdTimeoutTime( wdTime_msec);
 }
 
-bool RobotCtrl::setWdTimeoutTime( u_int16_t wdTimeout_msec )
+bool RobotCtrl::setWdTimeoutTime( uint16_t wdTimeout_msec )
 {
     if( !mBoardStatus.saveToEeprom )
         ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
 
-    vector<u_int16_t> data;
+    vector<uint16_t> data;
     int nReg = 1;
     data.resize(nReg);
     data[0] = wdTimeout_msec;
-    u_int16_t startAddr = WORD_COMWATCHDOG_TIME;
+    uint16_t startAddr = WORD_COMWATCHDOG_TIME;
 
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
@@ -664,13 +748,13 @@ bool RobotCtrl::setWdTimeoutTime( u_int16_t wdTimeout_msec )
     return true;
 }
 
-u_int16_t RobotCtrl::getWdTimeoutTime()
+uint16_t RobotCtrl::getWdTimeoutTime()
 {
     // >>>>> Status Register
-    u_int16_t startAddr = WORD_COMWATCHDOG_TIME;
-    u_int16_t nReg = 1;
+    uint16_t startAddr = WORD_COMWATCHDOG_TIME;
+    uint16_t nReg = 1;
 
-    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply.size() != nReg )
     {
@@ -706,10 +790,10 @@ bool RobotCtrl::enableSaveToEeprom( bool enable )
 bool RobotCtrl::updateBoardStatus()
 {
     // >>>>> Status Register
-    u_int16_t startAddr = WORD_STATUSBIT1;
-    u_int16_t nReg = 1;
+    uint16_t startAddr = WORD_STATUSBIT1;
+    uint16_t nReg = 1;
 
-    vector<u_int16_t> reply1 = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<uint16_t> reply1 = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply1.size() != nReg )
     {
@@ -718,7 +802,7 @@ bool RobotCtrl::updateBoardStatus()
     }
     // <<<<< Status Register
 
-    u_int16_t value = reply1[0];
+    uint16_t value = reply1[0];
 
     mBoardStatus.pidEnable = value & FLG_STATUSBI1_PID_EN;
     mBoardStatus.wdEnable = value & FLG_STATUSBI1_COMWATCHDOG;
@@ -735,16 +819,16 @@ bool RobotCtrl::updateBoardStatus()
     return true;
 }
 
-bool RobotCtrl::setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_t Kd )
+bool RobotCtrl::setPidValues( MotorPos mot, uint16_t Kp, uint16_t Ki, uint16_t Kd )
 {
     if( !mBoardStatus.saveToEeprom )
         ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
 
-    vector<u_int16_t> data;
+    vector<uint16_t> data;
     int nReg = 3;
     data.resize(nReg);
 
-    u_int16_t startAddr;
+    uint16_t startAddr;
 
     if( mot == motLeft )
         startAddr = WORD_PID_P_LEFT;
@@ -766,9 +850,9 @@ bool RobotCtrl::setPidValues( MotorPos mot, u_int16_t Kp, u_int16_t Ki, u_int16_
     ROS_INFO_STREAM( "PID parameters sent to RoboController");
 }
 
-bool RobotCtrl::getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int16_t& Kd )
+bool RobotCtrl::getPidValues( MotorPos mot, uint16_t& Kp, uint16_t& Ki, uint16_t& Kd )
 {
-    u_int16_t startAddr;
+    uint16_t startAddr;
 
     if( mot == motLeft )
         startAddr = WORD_PID_P_LEFT;
@@ -776,9 +860,9 @@ bool RobotCtrl::getPidValues( MotorPos mot, u_int16_t& Kp, u_int16_t& Ki, u_int1
         startAddr = WORD_PID_P_RIGHT;
 
     // >>>>> PID registers
-    u_int16_t nReg = 3;
+    uint16_t nReg = 3;
 
-    vector<u_int16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
+    vector<uint16_t> reply = mRbCtrl->readMultiReg( startAddr, nReg );
 
     if( reply.size() != nReg )
     {
@@ -799,13 +883,13 @@ bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeV
     if( !mBoardStatus.saveToEeprom )
         ROS_WARN_STREAM( "'Save to EEPROM' is not enable. Parameter changing will not be permanent!!!");
 
-    vector<u_int16_t> data;
+    vector<uint16_t> data;
     int nReg = 1;
     data.resize(nReg);
 
     // >>>>> First phase: setting value
-    u_int16_t charVal = (u_int16_t)(curChargeVal_V*1000.0);
-    u_int16_t startAddr = WORD_VAL_TAR_FS;
+    uint16_t charVal = (uint16_t)(curChargeVal_V*1000.0);
+    uint16_t startAddr = WORD_VAL_TAR_FS;
 
     data[0] = charVal;
 
@@ -819,7 +903,7 @@ bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeV
     ros::Duration(0.010).sleep(); // sleep for 10 msec
 
     // >>>>> Second phase: value imposition
-    u_int16_t flag = (valueType==CalLow)?0x00001:0x0020;
+    uint16_t flag = (valueType==CalLow)?0x00001:0x0020;
     startAddr = WORD_FLAG_TARATURA;
 
     data[0] = flag;
@@ -838,13 +922,13 @@ bool RobotCtrl::setBattCalibValue( AnalogCalibValue valueType, double curChargeV
     return true;
 }
 
-bool RobotCtrl::setRegister( u_int16_t regIdx, u_int16_t value )
+bool RobotCtrl::setRegister( uint16_t regIdx, uint16_t value )
 {
-    vector<u_int16_t> data;
+    vector<uint16_t> data;
     int nReg = 1;
     data.resize(nReg);
     data[0] = value;
-    u_int16_t startAddr = regIdx;
+    uint16_t startAddr = regIdx;
 
     if( !mRbCtrl->writeMultiReg( startAddr, nReg, data ) )
     {
@@ -858,7 +942,7 @@ bool RobotCtrl::setRegister( u_int16_t regIdx, u_int16_t value )
     return true;
 }
 
-vector<u_int16_t>  RobotCtrl::getRegisters( u_int16_t startAddr, u_int16_t nReg )
+vector<uint16_t>  RobotCtrl::getRegisters( uint16_t startAddr, uint16_t nReg )
 {
     return mRbCtrl->readMultiReg( startAddr, nReg );
 }
